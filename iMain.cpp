@@ -129,7 +129,7 @@ char *player2_image;
 int pic_ballx,pic_bally;
 int ball_speed = 0;
 bool ball_moving = false;
-int ball_direction = 1;
+int ball_dir = 1;
 int ball_width = 50;
 int player1_width = 103;
 int player2_width = 103;
@@ -178,72 +178,50 @@ void gravityTick()
     pic2_x += vx2;
 }
 
+bool hit(int px, int py, int pw, int ph,
+         int bx, int by, int bw, int bh)
+{
+    return !( px+pw < bx || bx+bw < px+53 ||
+              py+ph < by || by+bh < py+27 );
+}
 
+void resetField()
+{   
+    cheerSoundIdx = iPlaySound(CHEER_FILE, false);
+    Sleep(1000);
+    // Center the ball
+    pic_ballx = 475;
+    pic_bally = 85;
+
+    // Reset ball motion
+    ball_speed = 0;
+    ball_dir = 0; // Direction = 0 means stationary
+    ball_moving = false;
+
+    // Reset player 1
+    pic1_x = 100;
+    pic1_y = 62;
+    vx1 = vy1 = 0;
+    state = IDLE;
+
+    // Reset player 2
+    pic2_x = 745;
+    pic2_y = 62;
+    vx2 = vy2 = 0;
+    state_2 = IDLE;
+
+}
 void move_ball()
 {
-    if (ball_moving)
-    {
-        pic_ballx += ball_speed * ball_direction;
+    if(ball_speed==0) return;
 
-        // Check if ball reaches left edge
-        if (pic_ballx <= 0) {
-            pic_ballx = 0;
-            ball_moving = false;
+    pic_ballx += ball_speed * ball_dir;
+
+    if(pic_ballx<=119){  ++player2_score; resetField(); }
+    else if(pic_ballx+ball_width>=873){
+            ++player1_score; resetField(); 
         }
-        // Check if ball reaches right goal line
-        else if (pic_ballx+50 >= 873) {
-            player1_score++;
-            Sleep(1000);
-            cheerSoundIdx = iPlaySound(CHEER_FILE, false);
-            // Reset ball position to center
-            pic_ballx = 475;  
-            pic_bally = 85;   
-
-            // Reset player 1 position
-            pic1_x = 100;     
-            pic1_y = 62;
-            // Reset player 2 position
-            pic2_x = 745;
-            pic2_y = 62;     
-
-            // TODO: reset player 2 here when added
-
-            ball_moving = false;
-            ball_speed = 0;
-            state = IDLE;  // reset player 1 state to idle
-        }
-        else if (pic_ballx <= 119) {
-            player2_score++;
-            Sleep(3000);
-            cheerSoundIdx = iPlaySound(CHEER_FILE, false);
-            // Reset ball position to center
-            pic_ballx = 475;  
-            pic_bally = 85;   
-
-            // Reset player 1 position
-            pic1_x = 100;     
-            pic1_y = 62;
-            // Reset player 2 position
-            pic2_x = 745;
-            pic2_y = 62;     
-
-            // TODO: reset player 2 here when added
-
-            ball_moving = false;
-            ball_speed = 0;
-            state = IDLE;  // reset player 1 state to idle
-        }
-
-        // Gradually reduce speed
-        if (ball_speed > 0)
-            ball_speed--;
-
-        // Stop if speed is zero
-        if (ball_speed == 0)
-        {
-            ball_moving = false;
-        }
-    }
+    if(--ball_speed==0) ball_dir=0;
 }
 
 void new_game(){
@@ -252,28 +230,24 @@ void new_game(){
    iShowImage(pic2_x, pic2_y, player2_image);
    iShowImage(pic_ballx, pic_bally, "assets/images/Ball 02.png");
    
-   bool player1_touch = pic1_x + player1_width >= pic_ballx && pic1_y<=pic_bally+ball_width;
-   
-
-if (!ball_moving && player1_touch)
+   if( hit(pic1_x,pic1_y,player1_width,123,
+        pic_ballx,pic_bally,ball_width,ball_width) )
 {
-    ball_moving = true;
-    ball_direction = 1;    // Player 1 kicks to the right
-    ball_speed = 20;
-    kickSoundIdx = iPlaySound(kick, false);
-    
+    ball_dir   = (pic_ballx >= pic1_x+player1_width/2) ?  1 : -1;
+    ball_speed = 25;
+    iPlaySound(kick,false);
 }
 
-bool player2_touch =  (pic2_x+46 <= pic_ballx+ball_width) &&
-                          (pic2_y          <=     pic_bally+ball_width);
+if( hit(pic2_x,pic2_y,player2_width,100,
+        pic_ballx,pic_bally,ball_width,ball_width) )
+{
+    ball_dir   = (pic_ballx >= pic2_x+player2_width/2) ?  1 : -1;
+    ball_speed = 25;
+    iPlaySound(kick,false);
+}
 
-    if(!ball_moving && player2_touch)
-    {
-        ball_moving   = true;
-        ball_direction= -1;
-        ball_speed    = 20;
-        kickSoundIdx  = iPlaySound(kick, false);
-    }
+ball_moving = (ball_speed>0);
+
 
 }
 void update_player(){
@@ -476,6 +450,7 @@ void iMouse(int button, int state, int mx, int my)
             state = state_2 = IDLE;
             ball_moving = false;
             pic_ballx = 475; pic_bally = 85;
+            iDecreaseVolume(bgSoundIdx, 80);
             return;                /* Start play game */
         }
         if(mx>=MODES_X && mx<=MODES_X+BTN_W && my>=MODES_Y && my<=MODES_Y+BTN_H){
@@ -655,7 +630,9 @@ void iKeyboard(unsigned char key)
     switch (key)
     {
     case 'm':
-     k=0; break;
+     k=0; 
+     iIncreaseVolume(bgSoundIdx, 80);
+     break;
 if (k==1)
 {    case 'a':                                  
     if (pic2_y == 62) {        
