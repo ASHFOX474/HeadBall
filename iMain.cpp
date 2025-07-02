@@ -144,7 +144,28 @@ int vx1 = 0;          /* horizontal speed in air   */
 int vy2 = 0;          /* vertical speed in air*/
 int vx2 = 0;          /* horizontal speed in air*/
 
+inline int pLeft (int px){ return px + 53; }
+inline int pRight(int px){ return px + 103; }
+void resolvePlayerCollision()
+{
+    /*  X-axis overlap?  */
+    if( pRight(pic1_x)  > pLeft(pic2_x) &&   /* P1’s front > P2’s back */
+        pRight(pic2_x)  > pLeft(pic1_x) )    /* P2’s front > P1’s back */
+    {
+        int overlap1 = pRight(pic1_x) - pLeft(pic2_x);
+        int overlap2 = pRight(pic2_x) - pLeft(pic1_x);
 
+        if(pic1_x < pic2_x){               /* মুখোমুখি—P1 বামে, P2 ডানে */
+            pic1_x -= overlap1;            /* P1-কে বাঁয়ের দিকে ঠেলুন  */
+            pic2_x += overlap1;            /* P2-কে ডানের দিকে ঠেলুন   */
+        }else{                             /* উল্টা অবস্থান            */
+            pic1_x += overlap2;
+            pic2_x -= overlap2;
+        }
+        vx1 = vx2 = 0;
+    }
+}
+/*------------------------------------------------------------*/
 void gravityTick()
 {
     /*Player-1 vertical drift*/
@@ -176,6 +197,7 @@ void gravityTick()
         }
     }
     pic2_x += vx2;
+     resolvePlayerCollision(); 
 }
 
 bool hit(int px, int py, int pw, int ph,
@@ -635,32 +657,41 @@ void iKeyboard(unsigned char key)
      break;
 if (k==1)
 {    case 'a':                                  
-    if (pic2_y == 62) {        
-    pic2_x -= 10;
-    state_2 = FORWARD;
-    } else {                   
-    vx2 = -9;
-    }
+    if (pic1_y == 62)
+        {
+            pic1_x -= 10;
+            state   = BACKWARD;
+        }
+        else
+        {
+            vx1 = -9;
+        }
     break;
     case 'd':                      
-    if (pic2_y == 62) {
-    pic2_x += 10;
-    state_2 = BACKWARD;
-    } else {
-    vx2 =  9;
-    }
+    if (pic1_y == 62)            /* on ground → normal walk */
+        {
+            pic1_x += 10;
+            state   = FORWARD;
+        }
+        else                     
+        {
+            vx1 =  9;                
+        }
     break;
 
     case 'w':                      
-    if (pic2_y == 62) {
-    vy2   = 30;            
-    state_2 = JUMP;
-    }
+    if (pic1_y == 62)            
+        {
+            vy1   = 30;              
+            state = JUMP;
+        }
     break;
 
     case 's':                      
-    if (pic2_y > 62)
-    vy2 -= 3;
+    if (pic1_y > 62)             
+        {
+            vy1 -= 3;                
+        }
     break;}
     default:
         break;
@@ -687,42 +718,33 @@ void iSpecialKeyboard(unsigned char key)
     if (k==1)
     {if (key == GLUT_KEY_LEFT)
     {
-        if (pic1_y == 62)
-        {
-            pic1_x -= 10;
-            state   = BACKWARD;
-        }
-        else
-        {
-            vx1 = -9;
-        }
+       if (pic2_y == 62) {        
+    pic2_x -= 10;
+    state_2 = FORWARD;
+    } else {                   
+    vx2 = -9;
+    } 
     }
     if (key == GLUT_KEY_RIGHT)
     {
-        if (pic1_y == 62)            /* on ground → normal walk */
-        {
-            pic1_x += 10;
-            state   = FORWARD;
-        }
-        else                     
-        {
-            vx1 =  9;                
-        }
+       if (pic2_y == 62) {
+    pic2_x += 10;
+    state_2 = BACKWARD;
+    } else {
+    vx2 =  9;
+    } 
     }
     if (key == GLUT_KEY_UP)
     {
-        if (pic1_y == 62)            
-        {
-            vy1   = 30;              
-            state = JUMP;
-        }
+          if (pic2_y == 62) {
+    vy2   = 30;            
+    state_2 = JUMP;
+    }
     }
     if (key == GLUT_KEY_DOWN)
     {
-        if (pic1_y > 62)             
-        {
-            vy1 -= 3;                
-        }
+        if (pic2_y > 62)
+    vy2 -= 3;
     }}
     // place your codes for other keys here
 }
