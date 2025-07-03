@@ -15,7 +15,7 @@ enum
 };
 
 
-/* Prototypes for all user functions */
+
 void gravityTick(void);                       /* physics timer */
 void move_ball(void);                         /* ball movement timer */
 void new_game(void);                          /* draws gameplay screen */
@@ -33,6 +33,7 @@ void iSpecialKeyboard(unsigned char key);     /* arrow / F-keys */
 void update_player1(void);                    /* P1 animation timer */
 void update_player2(void);                    /* P2 animation timer */
 void update_player(void);
+void goalTick(void);
 
 /* For menu button */
 #define PLAY_X   595
@@ -45,16 +46,16 @@ void update_player(void);
 #define SET_Y    90
 #define QUIT_X   14
 #define QUIT_Y   560
-#define BTN_W    325   /* all buttons ≈ same width except Quit */
+#define BTN_W    325
 #define BTN_H     60
 #define QUIT_W   135
 #define QUIT_H   25
-int m = 0, n = 0, x = 0, y = 0, z = 0;   /* one flag per button */
-int k = 0;           /* 0 = MENU, 1 = GAME (add more states if needed) */
+int m = 0, n = 0, x = 0, y = 0, z = 0;
+int k = 0;
 /*----------------------------*/
 
 
-/*Setting menu*/
+/*<--------------------------Setting menu--------------------------->*/
 Image settings_bg;
 /* button hit-box constants (match the artwork coordinates) */
 #define BG_MUSIC_PLUS_BUTTON_X  600   /* + for BG music */
@@ -71,23 +72,65 @@ Image settings_bg;
 #define BTN_BACK_Y   192
 #define BTN_BACK_W   355
 #define BTN_BACK_H    60
-/*----------------------------*/
+/*----------------------------------------------------------------------*/
 
 /*sound*/
 int bgSoundIdx    = -1;      /* background music (loop)  */
 int cheerSoundIdx = -1;      /* one-shot goal cheer      */
 int kickSoundIdx = -1;
-
-/* file paths (change if you store elsewhere) */
 const char* BG_MUSIC_FILE  = "assets/sounds/bgm.WAV";
 const char* CHEER_FILE     = "assets/sounds/Goal.WAV";
 const char* kick = "assets/sounds/kick.WAV";
-
-
-
-
 /*------------*/
 
+/*<---------------------Loading-screen--------------------------->*/
+#define LOADING_TIME_MS 600
+#define BALL_JUMP_MS 200
+#define LOADING_RADIUS 15
+#define LOADING_Y 90
+const char* LOADING_BG  = "assets/images/Loading_Screen_1.png";
+const char* BALL_IMG = "assets/images/Ball 01.png";
+int  loadingTimer = 0;
+int  currentCircle = 0;
+bool loadingDone = false;
+bool loadingStarted = false;
+int b=0;
+/*----------------------------------------------------------------*/
+
+/*<----------------------Goal animation constants------------------------->*/
+#define GOAL_FRAMES 21
+#define GOAL_FRAME_MS 100
+#define GOAL_CX 500
+#define GOAL_CY 300
+
+const int GOAL_SIZE[GOAL_FRAMES] = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 150, 150, 150, 150, 150, 150};
+const char* GOAL_FILES[GOAL_FRAMES] = {
+    "assets/images/Goal/Goal_001.png",
+    "assets/images/Goal/Goal_002.png",
+    "assets/images/Goal/Goal_003.png",
+    "assets/images/Goal/Goal_004.png",
+    "assets/images/Goal/Goal_005.png",
+    "assets/images/Goal/Goal_006.png",
+    "assets/images/Goal/Goal_007.png",
+    "assets/images/Goal/Goal_008.png",
+    "assets/images/Goal/Goal_009.png",
+    "assets/images/Goal/Goal_010.png",
+    "assets/images/Goal/Goal_011.png",
+    "assets/images/Goal/Goal_012.png",
+    "assets/images/Goal/Goal_013.png",
+    "assets/images/Goal/Goal_014.png",
+    "assets/images/Goal/Goal_015.png",
+    "assets/images/Goal/Goal_016.png",
+    "assets/images/Goal/Goal_017.png",
+    "assets/images/Goal/Goal_018.png",
+    "assets/images/Goal/Goal_019.png",
+    "assets/images/Goal/Goal_020.png",
+    "assets/images/Goal/Goal_021.png"
+};
+Image goalImg[GOAL_FRAMES];
+int goalFrame = 0;
+bool goalAnimPlaying = false;
+/*-----------------------------------------------------*/
 
 /*Player 1 image variable*/
 int pic1_x, pic1_y;
@@ -148,27 +191,25 @@ inline int pLeft (int px){ return px + 53; }
 inline int pRight(int px){ return px + 103; }
 void resolvePlayerCollision()
 {
-    /*  X-axis overlap?  */
-    if( pRight(pic1_x)  > pLeft(pic2_x) &&   /* P1’s front > P2’s back */
-        pRight(pic2_x)  > pLeft(pic1_x) )    /* P2’s front > P1’s back */
+    if( pRight(pic1_x)  > pLeft(pic2_x) && pRight(pic2_x)  > pLeft(pic1_x) )  
     {
         int overlap1 = pRight(pic1_x) - pLeft(pic2_x);
         int overlap2 = pRight(pic2_x) - pLeft(pic1_x);
 
-        if(pic1_x < pic2_x){               /* মুখোমুখি—P1 বামে, P2 ডানে */
-            pic1_x -= overlap1;            /* P1-কে বাঁয়ের দিকে ঠেলুন  */
-            pic2_x += overlap1;            /* P2-কে ডানের দিকে ঠেলুন   */
-        }else{                             /* উল্টা অবস্থান            */
+        if(pic1_x < pic2_x){               
+            pic1_x -= overlap1;            
+            pic2_x += overlap1;            
+        }else{                             
             pic1_x += overlap2;
             pic2_x -= overlap2;
         }
         vx1 = vx2 = 0;
     }
 }
-/*------------------------------------------------------------*/
+
 void gravityTick()
 {
-    /*Player-1 vertical drift*/
+  
     if (pic1_y > 62 || vy1 > 0)
     {
         vy1 -= 2;
@@ -183,7 +224,7 @@ void gravityTick()
     }
     pic1_x += vx1;
 
-    /*Player-2 vertical drift*/
+    
     if (pic2_y > 62 || vy2 > 0)
     {
         vy2 -= 2;
@@ -209,8 +250,9 @@ bool hit(int px, int py, int pw, int ph,
 
 void resetField()
 {   
+    goalAnimPlaying = true;
+    goalFrame = 0; 
     cheerSoundIdx = iPlaySound(CHEER_FILE, false);
-    Sleep(1000);
     // Center the ball
     pic_ballx = 475;
     pic_bally = 85;
@@ -260,7 +302,7 @@ void new_game(){
     iPlaySound(kick,false);
 }
 
-if( hit(pic2_x,pic2_y,player2_width,100,
+if( hit(pic2_x,pic2_y,player2_width,123,
         pic_ballx,pic_bally,ball_width,ball_width) )
 {
     ball_dir   = (pic_ballx >= pic2_x+player2_width/2) ?  1 : -1;
@@ -275,6 +317,7 @@ ball_moving = (ball_speed>0);
 void update_player(){
     update_player1();
     update_player2();
+    goalTick();
 }
 
 void populate_player1_images()
@@ -345,6 +388,9 @@ function iDraw() is called again and again by the system.
 void loadresources()
 {
     iLoadImage(&bg, "assets/images/Menu.JPG");
+        for (int i = 0; i < GOAL_FRAMES; i++) {
+        iLoadImage(&goalImg[i], GOAL_FILES[i]);
+    }
    iLoadImage(&settings_bg, "assets/images/setting.JPG");
 
 
@@ -358,11 +404,74 @@ void draw_settings()
     iRectangle(290,192,355,60);
 }
 
+void blink(){
+    b=!b;
+}
+
+void drawLoadingScreen()
+{
+    iShowImage(0, 40, LOADING_BG);
+    if(!loadingStarted){
+        iSetColor(255,255,255);
+        if(b==0){iText(430, 70, "Click to continue", GLUT_BITMAP_9_BY_15);
+        iText(431, 71, "Click to continue", GLUT_BITMAP_9_BY_15);
+}        return;
+    }
+    int cx[3] = { 440, 500, 560 };
+    iSetColor(255,255,255);
+    for(int i=0;i<3;i++)
+        iFilledCircle(cx[i], LOADING_Y, LOADING_RADIUS);
+    iShowImage(cx[currentCircle]-LOADING_RADIUS,
+               LOADING_Y-LOADING_RADIUS,
+               BALL_IMG);
+}
+
+/*<--Loading Screen Timer-->*/
+void loadingTick()
+{
+    if(!loadingStarted || loadingDone) return;
+    loadingTimer += 20;
+    if( loadingTimer % BALL_JUMP_MS == 0 ){
+        currentCircle = (currentCircle+1)%3;
+    }
+    if( loadingTimer >= LOADING_TIME_MS ){
+        loadingDone = true;
+        k = 0;
+        iIncreaseVolume(bgSoundIdx, 100);
+    }
+}
+/*--------------------------*/
+
+void drawGoalOverlay()
+{
+    if (!goalAnimPlaying) return;
+    int w = GOAL_SIZE[goalFrame];
+    int h = w;
+    int x = GOAL_CX - w / 2;
+    int y = GOAL_CY - h / 2;
+    iShowImage(x, y, GOAL_FILES[goalFrame]);
+}
+
+void goalTick()
+{
+    if (!goalAnimPlaying) return;
+
+    goalFrame++;
+    if (goalFrame >= GOAL_FRAMES)
+    {
+        goalAnimPlaying = false;
+        goalFrame = 0;
+    }
+}
 
 void iDraw()
 {
     // place your drawing codes here
     iClear();
+    if(!loadingDone){
+        drawLoadingScreen();
+        return;
+    }
     if(k==3){
         draw_settings();
         return;
@@ -421,6 +530,7 @@ void iDraw()
     iText(35, 520, p1_score);  // Draw at top-left corner (adjust coords as needed)
     iSetColor(250,250,250);
     iText(65, 520, p2_score);
+    drawGoalOverlay();
     //iSetColor(237,106,94);
     //iFilledRectangle(238,513,444,565);
     //iText(240, 515, score_str);
@@ -455,6 +565,7 @@ void iMouseDrag(int mx, int my)
     // place your codes here
 }
 
+
 /*
 function iMouse() is called when the user presses/releases the mouse.
 (mx, my) is the position where the mouse pointer is.
@@ -472,11 +583,13 @@ void iMouse(int button, int state, int mx, int my)
             state = state_2 = IDLE;
             ball_moving = false;
             pic_ballx = 475; pic_bally = 85;
+            player2_score  = 0;
+            player1_score  = 0;
             iDecreaseVolume(bgSoundIdx, 80);
             return;                /* Start play game */
         }
         if(mx>=MODES_X && mx<=MODES_X+BTN_W && my>=MODES_Y && my<=MODES_Y+BTN_H){
-            /* Start modes */
+            k=4;
             return;
         }
         if(mx>=HIST_X && mx<=HIST_X+BTN_W && my>=HIST_Y && my<=HIST_Y+BTN_H){
@@ -525,6 +638,14 @@ void iMouse(int button, int state, int mx, int my)
     }
     return;   /* don’t let other menu/game clicks run while in settings */
 }
+
+    if(k == -1 && !loadingStarted && button==GLUT_LEFT_BUTTON && state==GLUT_DOWN){
+        loadingStarted = true;
+        loadingTimer   = 0;
+        currentCircle  = 0;
+        return;
+    }
+
     if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
     {
         // place your codes here
@@ -766,10 +887,15 @@ int main(int argc, char *argv[])
     pic_ballx = 475;
     pic_bally = 85;
     populate_player1_images();
-    iSetTimer(100, move_ball); // Start moving ball
+    iSetTimer(100, move_ball);
     populate_player2_images();
     iSetTimer(100, update_player);
     iSetTimer(30,  gravityTick);
+    iSetTimer(20, loadingTick);
+    iSetTimer(400, blink);
+    loadingDone = false;
+    k = -1;
+    iDecreaseVolume(bgSoundIdx, 100);
     iInitialize(1000, 600, "Head Soccer");
     return 0;
 }
