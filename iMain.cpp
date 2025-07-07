@@ -950,4 +950,5 @@ int main(int argc, char *argv[])
     iDecreaseVolume(bgSoundIdx, 100);
     iInitialize(1000, 600, "Head Soccer");
     return 0;
+    
 }
