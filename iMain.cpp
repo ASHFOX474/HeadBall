@@ -147,6 +147,7 @@ char player1_forward[10][122];
 char player1_backward[10][124];
 char player1_kick[9][106];
 char *player1_image;
+int kick_idx = 0;
 /*----------------------------*/
 
 
@@ -165,6 +166,7 @@ char player2_forward[10][122];
 char player2_backward[10][124];
 char player2_kick[9][106];
 char *player2_image;
+int kick_idx_2 = 0;
 /*----------------------------*/
 
 
@@ -178,6 +180,11 @@ int player1_width = 103;
 int player2_width = 103;
 int player1_score = 0;
 int player2_score  = 0;
+int bvx = 0, bvy = 0;     /* ball-velocity X/Y */
+const int BALL_GRAV = -2; /* change of Y*/
+const int GROUND_Y  = 85; /* initial y position of ball */
+const float RESTITUTION = 0.60f;   // Energy loss after every bounce
+const float FRICTION    = 0.97f;   // Friction
 /*----------------------------*/
 
 /*Motion for player 1*/
@@ -254,8 +261,9 @@ void resetField()
     goalFrame = 0; 
     cheerSoundIdx = iPlaySound(CHEER_FILE, false);
     // Center the ball
+    bvx = bvy = 0;
     pic_ballx = 475;
-    pic_bally = 85;
+    pic_bally = GROUND_Y;
 
     // Reset ball motion
     ball_speed = 0;
@@ -275,17 +283,32 @@ void resetField()
     state_2 = IDLE;
 
 }
+
 void move_ball()
 {
-    if(ball_speed==0) return;
-
-    pic_ballx += ball_speed * ball_dir;
-
-    if(pic_ballx<=119){  ++player2_score; resetField(); }
-    else if(pic_ballx+ball_width>=873){
-            ++player1_score; resetField(); 
-        }
-    if(--ball_speed==0) ball_dir=0;
+    if(bvx==0 && bvy==0) return;
+    /* New position of ball */
+    pic_ballx += bvx;
+    pic_bally += bvy;
+    /* Adding gravity */
+    bvy += BALL_GRAV;
+    /* Check if the ball touch the ground or not? */
+    if(pic_bally <= GROUND_Y){
+        pic_bally = GROUND_Y;
+        /*  Bounce  */
+        bvy = (-bvy) * RESTITUTION;   // Direction change, Energy loss.
+        bvx *= FRICTION;              // Ball velocity in X in decreasing due to friction.
+        /*  if the velocity is in X and Y axix is very very small then stop the ball  */
+        if(fabs(bvy) < 2)  bvy = 0;
+        if(fabs(bvx) < 1)  bvx = 0;
+    }
+    /* Check goalpost */
+    if(pic_ballx <= 119){
+        ++player2_score;  resetField();  return;
+    }
+    if(pic_ballx + ball_width >= 873){
+        ++player1_score;  resetField();  return;
+    }
 }
 
 void new_game(){
@@ -293,20 +316,24 @@ void new_game(){
    iShowImage(pic1_x, pic1_y, player1_image);
    iShowImage(pic2_x, pic2_y, player2_image);
    iShowImage(pic_ballx, pic_bally, "assets/images/Ball 02.png");
-   
-   if( hit(pic1_x,pic1_y,player1_width,123,
+    int ex1 = (state==KICK ? 15 : 0);      // extra reach P1
+    int ex2 = (state_2==KICK ? 15 : 0);    // extra reach P2
+
+   if( hit(pic1_x,pic1_y,player1_width+ex1,123,
         pic_ballx,pic_bally,ball_width,ball_width) )
 {
-    ball_dir   = (pic_ballx >= pic1_x+player1_width/2) ?  1 : -1;
-    ball_speed = 25;
+    bool strong = (state == KICK);
+    bvx = (pic_ballx >= pic1_x + player1_width/2) ?  25 : -25; // 25 px for normal pass
+    bvy = strong ? 25 : 0;                      // Projectile motion for only kick
     iPlaySound(kick,false);
 }
 
-if( hit(pic2_x,pic2_y,player2_width,123,
+if( hit(pic2_x-ex2,pic2_y,player2_width,123,
         pic_ballx,pic_bally,ball_width,ball_width) )
 {
-    ball_dir   = (pic_ballx >= pic2_x+player2_width/2) ?  1 : -1;
-    ball_speed = 25;
+    bool strong = (state_2 == KICK);
+    bvx = (pic_ballx >= pic2_x + player2_width/2) ?  20 : -20;
+    bvy = strong ? 25 : 0;
     iPlaySound(kick,false);
 }
 
@@ -338,7 +365,7 @@ void populate_player1_images()
     {
         sprintf(player1_forward[i], "assets/Characters/Character 01 - Brazil/PNG Sequences/Move Forward/Move Forward_%03d.png", i);
     }
-    for (int i = 0; i < 9; i++)
+    for (int i = 0; i < 5; i++)
     {
         sprintf(player1_kick[i], "assets/Characters/Character 01 - Brazil/PNG Sequences/Kick/Kick_%03d.png", i);
     }
@@ -364,15 +391,15 @@ void populate_player2_images(void)
     {
         sprintf(player2_falldown[i], "assets/Characters/Character 02 - England/PNG Sequences/Falling Down/Falling Down_%03d.png", i);
     }   
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 5; i++)
     {
         sprintf(player2_forward[i], "assets/Characters/Character 02 - England/PNG Sequences/Move Forward/Move Forward_%03d.png", i);
     }
-    for (int i = 0; i < 9; i++)
+    for (int i = 0; i < 5; i++)
     {
         sprintf(player2_kick[i], "assets/Characters/Character 02 - England/PNG Sequences/Kick/Kick_%03d.png", i);
     }
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 5; i++)
     {
         sprintf(player2_backward[i], "assets/Characters/Character 02 - England/PNG Sequences/Move Backward/Move Backward_%03d.png", i);
     }
@@ -706,7 +733,12 @@ void update_player1()
             state = IDLE;
         }
         break;
-    
+    case KICK:
+    player1_image = player1_kick[kick_idx];
+    kick_idx = (kick_idx + 1) % 5;
+    if(kick_idx == 0)
+        state = IDLE;
+    break;
         
     }
 }
@@ -723,7 +755,7 @@ void update_player2()
         break;
     case FORWARD:
         player2_image = player2_forward[forward_idx_2];
-        forward_idx_2 = (forward_idx_2 + 1) % 10;
+        forward_idx_2 = (forward_idx_2 + 1) % 5;
         if (forward_idx_2 == 0)
         {
             state_2 = IDLE;
@@ -743,7 +775,7 @@ void update_player2()
         break;
     case BACKWARD:
         player2_image = player2_backward[backward_idx_2];
-        backward_idx_2 = (backward_idx_2 + 1) % 10;
+        backward_idx_2 = (backward_idx_2 + 1) % 5;
         if (backward_idx_2 == 0)
         {
             state_2 = IDLE;
@@ -757,7 +789,12 @@ void update_player2()
             state_2 = IDLE;
         }
         break;
-    
+    case KICK:
+        player2_image = player2_kick[kick_idx_2];
+        kick_idx_2 = (kick_idx_2 + 1) % 5;
+        if(kick_idx_2 == 0)
+            state_2 = IDLE;
+        break;
         
     }
 }
@@ -780,30 +817,30 @@ if (k==1)
 {    case 'a':                                  
     if (pic1_y == 62)
         {
-            pic1_x -= 10;
+            pic1_x -= 15;
             state   = BACKWARD;
         }
         else
         {
-            vx1 = -9;
+            vx1 = -12;
         }
     break;
     case 'd':                      
     if (pic1_y == 62)            /* on ground → normal walk */
         {
-            pic1_x += 10;
+            pic1_x += 15;
             state   = FORWARD;
         }
         else                     
         {
-            vx1 =  9;                
+            vx1 =  12;                
         }
     break;
 
     case 'w':                      
     if (pic1_y == 62)            
         {
-            vy1   = 30;              
+            vy1   = 40;              
             state = JUMP;
         }
     break;
@@ -813,7 +850,22 @@ if (k==1)
         {
             vy1 -= 3;                
         }
-    break;}
+    break;
+
+    case 'f':
+    if(pic1_y == 62 && state != KICK){
+        state = KICK;
+        kick_idx = 0;
+    }
+    break;
+
+    case '/':
+    if(pic2_y == 62 && state_2 != KICK){
+        state_2    = KICK;
+        kick_idx_2 = 0;
+    }
+    break;
+}
     default:
         break;
     }
@@ -840,25 +892,25 @@ void iSpecialKeyboard(unsigned char key)
     {if (key == GLUT_KEY_LEFT)
     {
        if (pic2_y == 62) {        
-    pic2_x -= 10;
+    pic2_x -= 15;
     state_2 = FORWARD;
     } else {                   
-    vx2 = -9;
+    vx2 = -12;
     } 
     }
     if (key == GLUT_KEY_RIGHT)
     {
        if (pic2_y == 62) {
-    pic2_x += 10;
+    pic2_x += 15;
     state_2 = BACKWARD;
     } else {
-    vx2 =  9;
+    vx2 =  12;
     } 
     }
     if (key == GLUT_KEY_UP)
     {
           if (pic2_y == 62) {
-    vy2   = 30;            
+    vy2   = 40;            
     state_2 = JUMP;
     }
     }
@@ -887,9 +939,9 @@ int main(int argc, char *argv[])
     pic_ballx = 475;
     pic_bally = 85;
     populate_player1_images();
-    iSetTimer(100, move_ball);
+    iSetTimer(16, move_ball);
     populate_player2_images();
-    iSetTimer(100, update_player);
+    iSetTimer(60, update_player);
     iSetTimer(30,  gravityTick);
     iSetTimer(20, loadingTick);
     iSetTimer(400, blink);
