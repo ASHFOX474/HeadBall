@@ -949,6 +949,5 @@ int main(int argc, char *argv[])
     k = -1;
     iDecreaseVolume(bgSoundIdx, 100);
     iInitialize(1000, 600, "Head Soccer");
-    return 0;
-    
+    return 0;  
 }
