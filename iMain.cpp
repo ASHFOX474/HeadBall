@@ -55,6 +55,21 @@ int k = 0;
 /*----------------------------*/
 
 
+/* File save */
+#define MAX_NAME_LEN 30
+#define MAX_HISTORY_LINES 10
+#define MAX_LINE_LEN 100
+
+char player1Name[MAX_NAME_LEN + 1] = "";
+char player2Name[MAX_NAME_LEN + 1] = "";
+char currentNameInput[MAX_NAME_LEN + 1] = "";
+int enteringName1 = 1; // 1 = player1 typing, 0 = player2
+
+char historyEntries[MAX_HISTORY_LINES][MAX_LINE_LEN];
+int historyCount = 0;
+/*-----------------------------*/
+
+
 /*<--------------------------Setting menu--------------------------->*/
 Image settings_bg;
 /* button hit-box constants (match the artwork coordinates) */
@@ -559,10 +574,24 @@ void iDraw()
     }
     iShowImage(0, 40, "assets/images/Menu.png");
     iSetColor(255, 255, 255);
-    if(k==1){
+
+if (k == 6)
+{
+    iSetColor(30, 30, 30);
+    iFilledRectangle(0, 0, 1000, 600);
+    iSetColor(255, 255, 255);
+    if (enteringName1)
+        iText(100, 500, "Enter Player 1 Name:", GLUT_BITMAP_HELVETICA_18);
+    else
+        iText(100, 500, "Enter Player 2 Name:", GLUT_BITMAP_HELVETICA_18);
+
+    iText(100, 460, currentNameInput, GLUT_BITMAP_HELVETICA_18);
+    return;
+}
+
+if(k==1){
          new_game();
         }
-
     
     char p1_score[20];
     char p2_score[20];
@@ -624,7 +653,12 @@ void iMouse(int button, int state, int mx, int my)
     {
         // place your codes here
         if(mx>=PLAY_X && mx<=PLAY_X+BTN_W && my>=PLAY_Y && my<=PLAY_Y+BTN_H){
-            k = 1;
+            k = 6;
+            //bijoy add
+            currentNameInput[0] = '\0';
+            enteringName1 = 1;
+            //
+
             pic1_x = 100; pic1_y = 62;
             pic2_x = 745; pic2_y = 62;
             vx1 = vy1 = vx2 = vy2 = 0;
@@ -634,6 +668,9 @@ void iMouse(int button, int state, int mx, int my)
             player2_score  = 0;
             player1_score  = 0;
             iDecreaseVolume(bgSoundIdx, 80);
+
+
+            
             return;                /* Start play game */
         }
         if(mx>=MODES_X && mx<=MODES_X+BTN_W && my>=MODES_Y && my<=MODES_Y+BTN_H){
@@ -828,69 +865,55 @@ key- holds the ASCII value of the key pressed.
 
 void iKeyboard(unsigned char key)
 {
-    switch (key)
+    if (k == 6) // Name input mode
     {
-    case 'm':
-     k=0; 
-     iIncreaseVolume(bgSoundIdx, 80);
-     break;
-if (k==1)
-{    case 'a':                                  
-    if (pic1_y == 62)
+        if (key == '\r') // Enter key
         {
-            pic1_x -= 15;
-            state   = BACKWARD;
+            if (enteringName1)
+            {
+                strcpy(player1Name, currentNameInput);
+                currentNameInput[0] = '\0';
+                enteringName1 = 0;
+            }
+            else
+            {
+                strcpy(player2Name, currentNameInput);
+                currentNameInput[0] = '\0';
+                enteringName1 = 1;
+                k = 1; // Now start the game
+            }
         }
-        else
+        else if (key == '\b') // Backspace
         {
-            vx1 = -12;
+            int len = strlen(currentNameInput);
+            if (len > 0)
+                currentNameInput[len - 1] = '\0';
         }
-    break;
-    case 'd':                      
-    if (pic1_y == 62)            /* on ground → normal walk */
+        else if (strlen(currentNameInput) < MAX_NAME_LEN - 1)
         {
-            pic1_x += 15;
-            state   = FORWARD;
+            int len = strlen(currentNameInput);
+            currentNameInput[len] = key;
+            currentNameInput[len + 1] = '\0';
         }
-        else                     
-        {
-            vx1 =  12;                
-        }
-    break;
 
-    case 'w':                      
-    if (pic1_y == 62)            
-        {
-            vy1   = 40;              
-            state = JUMP;
-        }
-    break;
-
-    case 's':                      
-    if (pic1_y > 62)             
-        {
-            vy1 -= 3;                
-        }
-    break;
-
-    case 'f':
-    if(pic1_y == 62 && state != KICK){
-        state = KICK;
-        kick_idx = 0;
+        return; // prevent game control when entering name
     }
-    break;
 
-    case '/':
-    if(pic2_y == 62 && state_2 != KICK){
-        state_2    = KICK;
-        kick_idx_2 = 0;
-    }
-    break;
-}
-    default:
-        break;
+    // Your usual game controls below (only when k == 1)
+    if (k == 1)
+    {
+        if (key == 'a')
+        {
+            // Move player left
+        }
+        else if (key == 'd')
+        {
+            // Move player right
+        }
+        // add other controls here...
     }
 }
+
 
 /*
 function iSpecialKeyboard() is called whenver user hits special keys likefunction
