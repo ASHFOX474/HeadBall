@@ -310,6 +310,21 @@ void move_ball()
         ++player1_score;  resetField();  return;
     }
 }
+int count_timer=0;
+int second,minute;
+char timeText[20];
+
+void Watch(){
+    count_timer++;
+    
+    second = count_timer % 60;
+    minute = count_timer / 60;
+
+    
+    sprintf(timeText, "%02d:%02d", minute, second); // 2-digit format
+
+    
+}
 
 void new_game(){
     iShowImage(0, 40, "assets/images/bg.png");
@@ -414,7 +429,7 @@ function iDraw() is called again and again by the system.
 */
 void loadresources()
 {
-    iLoadImage(&bg, "assets/images/Menu.JPG");
+    iLoadImage(&bg, "assets/images/Menu.png");
         for (int i = 0; i < GOAL_FRAMES; i++) {
         iLoadImage(&goalImg[i], GOAL_FILES[i]);
     }
@@ -503,8 +518,13 @@ void iDraw()
         draw_settings();
         return;
     }
+    if(k==4){
+        iShowImage(0,40,"assets/images/Mode.png");
+        iRectangle(227,150,428,67);
+        return;
+    }
     if(k==0){
-        iShowImage(0,40,"assets/images/Menu.JPG");
+        iShowImage(0,40,"assets/images/Menu.png");
         /* Word in normal font */
         iSetColor(255,255,255);
         if(!m)iText(PLAY_X+135,  PLAY_Y+25,  "PLAY",   GLUT_BITMAP_HELVETICA_18);
@@ -537,7 +557,7 @@ void iDraw()
         }
         return;
     }
-    iShowImage(0, 40, "assets/images/Menu.JPG");
+    iShowImage(0, 40, "assets/images/Menu.png");
     iSetColor(255, 255, 255);
     iText(10,10, "Press p for pause, r for resume, END for exit.");
     if(k==1){
@@ -557,6 +577,8 @@ void iDraw()
     iText(35, 520, p1_score);  // Draw at top-left corner (adjust coords as needed)
     iSetColor(250,250,250);
     iText(65, 520, p2_score);
+    iSetColor(255, 255, 255);  // White color (change if needed)
+    iText(460, 560, timeText, GLUT_BITMAP_HELVETICA_18); // Top-center-ish position
     drawGoalOverlay();
     //iSetColor(237,106,94);
     //iFilledRectangle(238,513,444,565);
@@ -945,6 +967,7 @@ int main(int argc, char *argv[])
     iSetTimer(30,  gravityTick);
     iSetTimer(20, loadingTick);
     iSetTimer(400, blink);
+    iSetTimer(1000,Watch);
     loadingDone = false;
     k = -1;
     iDecreaseVolume(bgSoundIdx, 100);
