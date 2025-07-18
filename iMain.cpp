@@ -36,20 +36,20 @@ void update_player(void);
 void goalTick(void);
 
 /* For menu button */
-#define PLAY_X   595
-#define PLAY_Y   320
-#define MODES_X  595
-#define MODES_Y  235
-#define HIST_X   595
-#define HIST_Y   162
-#define SET_X    595
-#define SET_Y    90
-#define QUIT_X   14
-#define QUIT_Y   560
-#define BTN_W    325
+#define PLAY_X   602
+#define PLAY_Y   373
+#define MODES_X  602
+#define MODES_Y  294
+#define HIST_X   602
+#define HIST_Y   217
+#define SET_X    602
+#define SET_Y    138
+#define QUIT_X   0
+#define QUIT_Y   538
+#define BTN_W    350
 #define BTN_H     60
-#define QUIT_W   135
-#define QUIT_H   25
+#define QUIT_W   214
+#define QUIT_H   45
 int m = 0, n = 0, x = 0, y = 0, z = 0;
 int k = 0;
 /*----------------------------*/
@@ -315,10 +315,10 @@ int second,minute;
 char timeText[20];
 
 void Watch(){
-    count_timer++;
+    if(k==1){count_timer++;
     
     second = count_timer % 60;
-    minute = count_timer / 60;
+    minute = count_timer / 60;}
 
     
     sprintf(timeText, "%02d:%02d", minute, second); // 2-digit format
@@ -527,39 +527,38 @@ void iDraw()
         iShowImage(0,40,"assets/images/Menu.png");
         /* Word in normal font */
         iSetColor(255,255,255);
-        if(!m)iText(PLAY_X+135,  PLAY_Y+25,  "PLAY",   GLUT_BITMAP_HELVETICA_18);
-        if(!n)iText(MODES_X+130, MODES_Y+25, "MODES",   GLUT_BITMAP_HELVETICA_18);
-        if(!x)iText(HIST_X+120,  HIST_Y+25,  "HISTORY", GLUT_BITMAP_HELVETICA_18);
-        if(!y)iText(SET_X+120,   SET_Y+25,   "SETTING", GLUT_BITMAP_HELVETICA_18);
-        if(!z)iText(QUIT_X+53,  QUIT_Y+10,  "QUIT",    GLUT_BITMAP_TIMES_ROMAN_10);
+        if(!m)iText(PLAY_X+145,  PLAY_Y+25,  "PLAY",   GLUT_BITMAP_HELVETICA_18);
+        if(!n)iText(MODES_X+140, MODES_Y+25, "MODES",   GLUT_BITMAP_HELVETICA_18);
+        if(!x)iText(HIST_X+130,  HIST_Y+25,  "HISTORY", GLUT_BITMAP_HELVETICA_18);
+        if(!y)iText(SET_X+130,   SET_Y+25,   "SETTING", GLUT_BITMAP_HELVETICA_18);
+        if(!z)iText(QUIT_X+80,  QUIT_Y+18,  "QUIT",    GLUT_BITMAP_HELVETICA_18);
 
         /* Word in bold form */
         iSetColor(255,255,0);    /* Bright Yellow */
         if(m){                  /* PLAY */
-            iText(PLAY_X+130, PLAY_Y+22, "PLAY", GLUT_BITMAP_TIMES_ROMAN_24);
-            iText(PLAY_X+131, PLAY_Y+23, "PLAY", GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(PLAY_X+140, PLAY_Y+22, "PLAY", GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(PLAY_X+141, PLAY_Y+23, "PLAY", GLUT_BITMAP_TIMES_ROMAN_24);
         }
         if(n){                  /* MODES */
-            iText(MODES_X+123, MODES_Y+22, "MODES", GLUT_BITMAP_TIMES_ROMAN_24);
-            iText(MODES_X+124, MODES_Y+23, "MODES", GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(MODES_X+133, MODES_Y+22, "MODES", GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(MODES_X+134, MODES_Y+23, "MODES", GLUT_BITMAP_TIMES_ROMAN_24);
         }
         if(x){                  /* HISTORY */
-            iText(HIST_X+115, HIST_Y+22, "HISTORY", GLUT_BITMAP_TIMES_ROMAN_24);
-            iText(HIST_X+116, HIST_Y+23, "HISTORY", GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(HIST_X+125, HIST_Y+22, "HISTORY", GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(HIST_X+126, HIST_Y+23, "HISTORY", GLUT_BITMAP_TIMES_ROMAN_24);
         }
         if(y){                  /* SETTING */
-            iText(SET_X+115, SET_Y+22, "SETTING", GLUT_BITMAP_TIMES_ROMAN_24);
-            iText(SET_X+116, SET_Y+23, "SETTING", GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(SET_X+125, SET_Y+22, "SETTING", GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(SET_X+126, SET_Y+23, "SETTING", GLUT_BITMAP_TIMES_ROMAN_24);
         }
         if(z){                  /* QUIT */
-            iText(QUIT_X+50, QUIT_Y+8, "QUIT", GLUT_BITMAP_HELVETICA_12);
-            iText(QUIT_X+51, QUIT_Y+9, "QUIT", GLUT_BITMAP_HELVETICA_12);
+            iText(QUIT_X+75, QUIT_Y+15, "QUIT", GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(QUIT_X+76, QUIT_Y+16, "QUIT", GLUT_BITMAP_TIMES_ROMAN_24);
         }
         return;
     }
     iShowImage(0, 40, "assets/images/Menu.png");
     iSetColor(255, 255, 255);
-    iText(10,10, "Press p for pause, r for resume, END for exit.");
     if(k==1){
          new_game();
         }
