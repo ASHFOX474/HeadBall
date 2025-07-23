@@ -61,45 +61,6 @@ int k = 0;
 /*----------------------------*/
 
 
-/*<---------Player Naming and history Variables----------->*/
-char player1_name[100] = "Player 1"; // Default name
-char player2_name[100] = "Player 2"; // Default name
-char name_input_str[100];
-int name_input_len = 0;
-bool show_cursor = true;
-// Game History Structure and Variables
-struct GameResult {
-    char p1_name[100];
-    char p2_name[100];
-    int p1_score;
-    int p2_score;
-};
-GameResult history_log[5]; // Store up to 10 past games
-int history_count = 0;
-/*<------------------------------------------------------>*/
-
-
-/*<------------------Goal Detection------------------>*/
-const int WINDOW_WIDTH   = 1000;
-const int WINDOW_HEIGHT  = 600;
-const int LEFT_GOAL_X    = 119;   // X-pos of the left goal line
-const int RIGHT_GOAL_X   = 873;   // X-pos of the right goal line
-const int GOAL_TOP_Y     = 250;   // Y-pos of the bottom of the top goal bar
-const int LEFT_BOUNDARY  = 20;    // X-pos of the back of the left goal net
-const int RIGHT_BOUNDARY = 960;   // X-pos of the back of the right goal net
-/*----------------------------------------------------*/
-
-
-/*<-----------------------Mode page------------------------>*/
-#define GAME_TIME_SECONDS 180
-bool mode_3min_selected = true;
-bool gameEnded = false;
-bool mode_score_selected = false;
-#define WIN_SCORE 5
-
-/*----------------------------------------------------------*/
-
-
 /*<--------------------------Setting menu--------------------------->*/
 Image settings_bg;
 /* button hit-box constants (match the artwork coordinates) */
@@ -870,21 +831,13 @@ void iDraw()
         }
         return;
     }
+    iShowImage(0, 40, "assets/images/Menu.png");
+    iSetColor(255, 255, 255);
     if(k==1){
          new_game();
          handlePlayerInput();
         }
-    if(k==5){
-        iShowImage(0, 40, "assets/images/result.png");
-        iSetColor(255,255,255);
-        if(player1_score > player2_score)
-            iText(450, 300, "PLAYER 1 WINS", GLUT_BITMAP_TIMES_ROMAN_24);
-        else if(player2_score > player1_score)
-            iText(450, 300, "PLAYER 2 WINS", GLUT_BITMAP_TIMES_ROMAN_24);
-        else
-            iText(450, 300, "DRAW!", GLUT_BITMAP_TIMES_ROMAN_24);
-        return;
-    }
+
     
     char p1_score[20];
     char p2_score[20];
@@ -939,11 +892,17 @@ void iMouse(int button, int state, int mx, int my)
     {
         // place your codes here
         if(mx>=PLAY_X && mx<=PLAY_X+BTN_W && my>=PLAY_Y && my<=PLAY_Y+BTN_H){
-            k = P1_NAME_INPUT;      // Go to Player 1 Name Input screen
-            name_input_len = 0;     // Reset input string
-            name_input_str[0] = '\0';
-            return;
-                /* Start play game */
+            k = 1;
+            pic1_x = 100; pic1_y = 62;
+            pic2_x = 745; pic2_y = 62;
+            vx1 = vy1 = vx2 = vy2 = 0;
+            state = state_2 = IDLE;
+            ball_moving = false;
+            pic_ballx = 475; pic_bally = 85;
+            player2_score  = 0;
+            player1_score  = 0;
+            iDecreaseVolume(bgSoundIdx, 80);
+            return;                /* Start play game */
         }
         if(mx>=MODES_X && mx<=MODES_X+BTN_W && my>=MODES_Y && my<=MODES_Y+BTN_H){
             k=4;
@@ -1149,48 +1108,70 @@ function iKeyboard() is called whenever the user hits a key in keyboard.
 */
 void iKeyboard(unsigned char key)
 {
-    // Only handle single-press, non-movement actions here.
-    if (k == P1_NAME_INPUT || k == P2_NAME_INPUT) {
-        if (key == '\r') { // Enter key pressed
-            if (k == P1_NAME_INPUT) {
-                strcpy(player1_name, name_input_str);
-                k = P2_NAME_INPUT; // Move to player 2's turn
-                name_input_len = 0;
-                name_input_str[0] = '\0';
-            } else if (k == P2_NAME_INPUT) {
-                strcpy(player2_name, name_input_str);
-                // Now start the game
-                k = 1;
-                reset_game();
-                gameEnded = false;
-                count_timer = -1;
-                minute = 0;
-                second = 0;
-            }
-        } else if (key == '\b') { // Backspace key
-            if (name_input_len > 0) {
-                name_input_len--;
-                name_input_str[name_input_len] = '\0';
-            }
-        } else { // Any other character
-            if (name_input_len < 99) {
-                name_input_str[name_input_len] = key;
-                name_input_len++;
-                name_input_str[name_input_len] = '\0';
-            }
-        }
-        return; // Don't process other keys while typing name
-    }
     switch (key)
     {
     case 'm':
      k=0; 
      iIncreaseVolume(bgSoundIdx, 80);
-     mode_3min_selected = false;
-     gameEnded = false;
      break;
+if (k==1)
+{    case 'a':                                  
+    if (pic1_y == 62)
+        {
+            pic1_x -= 15;
+            state   = BACKWARD;
+        }
+        else
+        {
+            vx1 = -12;
+        }
+    break;
+    case 'd':                      
+    if (pic1_y == 62)            /* on ground → normal walk */
+        {
+            pic1_x += 15;
+            state   = FORWARD;
+        }
+        else                     
+        {
+            vx1 =  12;                
+        }
+    break;
+
+    case 'w':                      
+    if (pic1_y == 62)            
+        {
+            vy1   = 40;              
+            state = JUMP;
+        }
+    break;
+
+    case 's':                      
+    if (pic1_y > 62)             
+        {
+            vy1 -= 3;                
+        }
+    break;
+
+    case 'f':
+    if(pic1_y == 62 && state != KICK){
+        state = KICK;
+        kick_idx = 0;
+    }
+    break;
+
+    case '/':
+    if(pic2_y == 62 && state_2 != KICK){
+        state_2    = KICK;
+        kick_idx_2 = 0;
+    }
+    break;
+}
+    default:
+        break;
     }
 }
+
 
 /*
 function iSpecialKeyboard() is called whenver user hits special keys
