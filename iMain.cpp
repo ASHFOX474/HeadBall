@@ -40,6 +40,7 @@ void saveHistory();
 void loadHistory();
 void addResultToHistory();
 void cursorBlink();
+bool hit(int px, int py, int pw, int ph, int bx, int by, int bw, int bh);
 
 /* For menu button */
 #define PLAY_X   602
@@ -59,6 +60,47 @@ void cursorBlink();
 int m = 0, n = 0, x = 0, y = 0, z = 0;
 int k = 0;
 /*----------------------------*/
+
+
+/*<---------Player Naming and history Variables----------->*/
+char player1_name[100] = "Player 1"; // Default name
+char player2_name[100] = "Player 2"; // Default name
+char name_input_str[100];
+int name_input_len = 0;
+bool show_cursor = true;
+// Game History Structure and Variables
+struct GameResult {
+    char p1_name[100];
+    char p2_name[100];
+    int p1_score;
+    int p2_score;
+};
+const int MAX_HISTORY = 5;
+GameResult history_log[MAX_HISTORY]; // Store up to 5 past games
+int history_count = 0;
+int next_history_slot = 0;
+/*<------------------------------------------------------>*/
+
+
+/*<------------------Goal Detection------------------>*/
+const int WINDOW_WIDTH   = 1000;
+const int WINDOW_HEIGHT  = 600;
+const int LEFT_GOAL_X    = 119;   // X-pos of the left goal line
+const int RIGHT_GOAL_X   = 873;   // X-pos of the right goal line
+const int GOAL_TOP_Y     = 250;   // Y-pos of the bottom of the top goal bar
+const int LEFT_BOUNDARY  = 20;    // X-pos of the back of the left goal net
+const int RIGHT_BOUNDARY = 960;   // X-pos of the back of the right goal net
+/*----------------------------------------------------*/
+
+
+/*<-----------------------Mode page------------------------>*/
+#define GAME_TIME_SECONDS 180
+bool mode_3min_selected = true;
+bool gameEnded = false;
+bool mode_score_selected = false;
+#define WIN_SCORE 5
+
+/*----------------------------------------------------------*/
 
 
 /*<--------------------------Setting menu--------------------------->*/
@@ -154,6 +196,7 @@ char player1_backward[10][124];
 char player1_kick[9][106];
 char *player1_image;
 int kick_idx = 0;
+int ex1, ex2;
 /*----------------------------*/
 
 
@@ -214,7 +257,7 @@ void resolvePlayerCollision()
 
     bool p1_is_grounded = (pic1_y < 70);
     bool p2_is_grounded = (pic2_y < 70);
-
+    int g = (pic1_x<pic2_x) ? (pic2_x - pic1_x) : (pic1_x - pic2_x);
     // Check for x-axis overlap AND if both players are on the ground
     if( pRight(pic1_x) > pLeft(pic2_x) && pRight(pic2_x) > pLeft(pic1_x) && p1_is_grounded && p2_is_grounded)
     {
@@ -236,6 +279,24 @@ void resolvePlayerCollision()
         }
 
         // Stop their horizontal movement to prevent them from pushing through each other.
+        vx1 = vx2 = 0;
+    }
+    else if((hit(pic1_x,pic1_y,player1_width+ex1,123, pic_ballx,pic_bally,ball_width,ball_width) || hit(pic2_x-ex2,pic2_y,player2_width,123, pic_ballx,pic_bally,ball_width,ball_width)) && (g <= 115)){
+
+        if(pic1_x < pic_ballx) {
+            pic1_x -= 5;
+        } 
+        else if(pic1_x > pic_ballx){
+            pic1_x += 5;
+        }
+
+        if(pic2_x < pic_ballx) {
+            pic2_x -= 5;
+        } 
+        else if(pic2_x > pic_ballx){
+            pic2_x += 5;
+        }
+
         vx1 = vx2 = 0;
     }
 }
@@ -488,12 +549,12 @@ void new_game(){
     iShowImage(pic1_x, pic1_y, player1_image);
     iShowImage(pic2_x, pic2_y, player2_image);
     iShowImage(pic_ballx, pic_bally, "assets/images/Ball 02.png");
-    int ex1 = (state==KICK ? 15 : 0);      // extra reach P1
-    int ex2 = (state_2==KICK ? 15 : 0);    // extra reach P2
+    ex1 = (state==KICK ? 15 : 0);      // extra reach P1
+    ex2 = (state_2==KICK ? 15 : 0);    // extra reach P2
 
     if( hit(pic1_x,pic1_y,player1_width+ex1,123, pic_ballx,pic_bally,ball_width,ball_width) ){
         bool strong = (state == KICK);
-        bvx = (pic_ballx >= pic1_x + player1_width/2) ?  20 : -20;
+        bvx = (pic_ballx >= pic1_x + 20 ) ?  20 : -20;
         bvy = strong ? 20 : 0;                      // Projectile motion for only kick
         iPlaySound(kick,false);
     }
@@ -522,7 +583,7 @@ void update_player(){
     goalTick();
 }
 
-void populate_player1_images()
+void populate_player1_images(void)
 {
     for (int i = 0; i < 18; i++)
     {
@@ -615,17 +676,22 @@ void drawLoadingScreen()
     iShowImage(0, 40, LOADING_BG);
     if(!loadingStarted){
         iSetColor(255,255,255);
-        if(b==0){iText(430, 70, "Click to continue", GLUT_BITMAP_9_BY_15);
-        iText(431, 71, "Click to continue", GLUT_BITMAP_9_BY_15);
-}        return;
+
+        if(b==0){
+            iText(430, 70, "Click to continue", GLUT_BITMAP_9_BY_15);
+            iText(431, 71, "Click to continue", GLUT_BITMAP_9_BY_15);
+        }
+        return;
     }
+
     int cx[3] = { 440, 500, 560 };
+
     iSetColor(255,255,255);
-    for(int i=0;i<3;i++)
+    for(int i=0;i<3;i++){
         iFilledCircle(cx[i], LOADING_Y, LOADING_RADIUS);
-    iShowImage(cx[currentCircle]-LOADING_RADIUS,
-               LOADING_Y-LOADING_RADIUS,
-               BALL_IMG);
+    }
+
+    iShowImage(cx[currentCircle]-LOADING_RADIUS,LOADING_Y-LOADING_RADIUS,BALL_IMG);
 }
 
 /*<--Loading Screen Timer-->*/
@@ -672,36 +738,84 @@ void cursorBlink() {
     show_cursor = !show_cursor;
 }
 
-// Adds the most recent game result to our history log
+// Adds the most recent game result to our history log in a circular way
 void addResultToHistory() {
-    if (history_count < 5) { // Don't exceed array size
-        strcpy(history_log[history_count].p1_name, player1_name);
-        strcpy(history_log[history_count].p2_name, player2_name);
-        history_log[history_count].p1_score = player1_score;
-        history_log[history_count].p2_score = player2_score;
+    // Place the new result into the next available slot
+    strcpy(history_log[next_history_slot].p1_name, player1_name);
+    strcpy(history_log[next_history_slot].p2_name, player2_name);
+    history_log[next_history_slot].p1_score = player1_score;
+    history_log[next_history_slot].p2_score = player2_score;
+
+    // Move the "next slot" marker forward, wrapping around from 4 back to 0
+    next_history_slot = (next_history_slot + 1) % MAX_HISTORY;
+
+    // The total number of items in history grows until it hits the max
+    if (history_count < MAX_HISTORY) {
         history_count++;
     }
 }
 
-// Saves the entire history log to a binary file
+// Saves the history log to a human-readable text file
 void saveHistory() {
-    FILE *fp = fopen("history.bin", "wb");
+    FILE *fp = fopen("history.txt", "w");
     if (fp != NULL) {
-        fwrite(history_log, sizeof(GameResult), history_count, fp);
+        // We must write the records in chronological order.
+        // The oldest record is at the current 'next_history_slot' index.
+        for (int i = 0; i < history_count; i++) {
+            int index = (next_history_slot + i) % MAX_HISTORY;
+
+            char temp_p1_name[100];
+            char temp_p2_name[100];
+            strcpy(temp_p1_name, history_log[index].p1_name);
+            strcpy(temp_p2_name, history_log[index].p2_name);
+
+            // Replace spaces with underscores for safe file storage
+            for (int j = 0; temp_p1_name[j] != '\0'; j++) {
+                if (temp_p1_name[j] == ' ') temp_p1_name[j] = '_';
+            }
+            for (int j = 0; temp_p2_name[j] != '\0'; j++) {
+                if (temp_p2_name[j] == ' ') temp_p2_name[j] = '_';
+            }
+
+            fprintf(fp, "%s %s %d %d\n",
+                    temp_p1_name,
+                    temp_p2_name,
+                    history_log[index].p1_score,
+                    history_log[index].p2_score);
+        }
         fclose(fp);
     }
 }
 
-// Loads the history log from the file when the game starts
+// Loads the history log from the text file when the game starts
 void loadHistory() {
-    FILE *fp = fopen("history.bin", "rb");
+    FILE *fp = fopen("history.txt", "r");
     if (fp != NULL) {
-        // Read file contents one struct at a time until the end
-        while(fread(&history_log[history_count], sizeof(GameResult), 1, fp) == 1) {
+        history_count = 0; // Reset count before loading
+        while (fscanf(fp, "%s %s %d %d",
+                      history_log[history_count].p1_name,
+                      history_log[history_count].p2_name,
+                      &history_log[history_count].p1_score,
+                      &history_log[history_count].p2_score) != EOF)
+        {
+            // Replace underscores back with spaces
+            char* p1_name = history_log[history_count].p1_name;
+            for (int j = 0; p1_name[j] != '\0'; j++) {
+                if (p1_name[j] == '_') p1_name[j] = ' ';
+            }
+            char* p2_name = history_log[history_count].p2_name;
+            for (int j = 0; p2_name[j] != '\0'; j++) {
+                if (p2_name[j] == '_') p2_name[j] = ' ';
+            }
+
             history_count++;
-            if (history_count >= 50) break; // Stop if array is full
+            if (history_count >= MAX_HISTORY) break;
         }
         fclose(fp);
+
+        // After loading, the next slot is simply the number of items read,
+        // using modulo to handle the case where the history is full.
+        next_history_slot = history_count % MAX_HISTORY;
     }
 }
 
@@ -716,7 +830,7 @@ void iDraw()
     }
         // NEW: Player 1 Name Input Screen
     if (k == P1_NAME_INPUT) {
-        iShowImage(0, 40, "assets/images/bg.png"); // Use any background
+        iShowImage(0, 40, "assets/images/name.jpg"); // Use any background
         iSetColor(255, 255, 0);
         iText(400, 400, "Enter Player 1 Name:", GLUT_BITMAP_TIMES_ROMAN_24);
         iRectangle(350, 300, 300, 50);
@@ -731,7 +845,7 @@ void iDraw()
 
     // NEW: Player 2 Name Input Screen
     if (k == P2_NAME_INPUT) {
-        iShowImage(0, 40, "assets/images/bg.png"); // Use any background
+        iShowImage(0, 40, "assets/images/name.jpg"); // Use any background
         iSetColor(255, 255, 0);
         iText(400, 400, "Enter Player 2 Name:", GLUT_BITMAP_TIMES_ROMAN_24);
         iRectangle(350, 300, 300, 50);
@@ -747,15 +861,16 @@ void iDraw()
     // NEW: History Screen
     if (k == HISTORY) {
         iShowImage(0, 40, "assets/images/HIS.jpg");
-        iSetColor(255, 255, 0);
-        iText(450, 520, "GAME HISTORY", GLUT_BITMAP_TIMES_ROMAN_24);
-        iSetColor(255, 0, 0);
+        iSetColor(255, 0,0);
+        int newest_game_index = (next_history_slot - 1 + MAX_HISTORY) % MAX_HISTORY;
         for (int i = 0; i < history_count; i++) {
             char history_text[250];
             // Display latest game at the top
-            int index = history_count - 1 - i;
-            sprintf(history_text, "%s [%d] - [%d] %s", history_log[index].p1_name, history_log[index].p1_score, history_log[index].p2_score, history_log[index].p2_name);
-            iText(350, 450 - (i) * 50, history_text, GLUT_BITMAP_HELVETICA_18);
+            int index = (newest_game_index - i + MAX_HISTORY) % MAX_HISTORY;
+            sprintf(history_text, "%d        %d", history_log[index].p1_score, history_log[index].p2_score);
+            iText(170, 425 - i * 65, history_log[index].p1_name, GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(457, 425 - i * 65, history_text, GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(580, 425 - i * 65, history_log[index].p2_name, GLUT_BITMAP_TIMES_ROMAN_24);
         }
         // Draw a Back button
         iSetColor(255, 0, 0);
@@ -831,13 +946,21 @@ void iDraw()
         }
         return;
     }
-    iShowImage(0, 40, "assets/images/Menu.png");
-    iSetColor(255, 255, 255);
     if(k==1){
          new_game();
          handlePlayerInput();
         }
-
+    if(k==5){
+        iShowImage(0, 40, "assets/images/result.png");
+        iSetColor(255,255,255);
+        if(player1_score > player2_score)
+            iText(450, 300, "PLAYER 1 WINS", GLUT_BITMAP_TIMES_ROMAN_24);
+        else if(player2_score > player1_score)
+            iText(450, 300, "PLAYER 2 WINS", GLUT_BITMAP_TIMES_ROMAN_24);
+        else
+            iText(450, 300, "DRAW!", GLUT_BITMAP_TIMES_ROMAN_24);
+        return;
+    }
     
     char p1_score[20];
     char p2_score[20];
@@ -892,17 +1015,11 @@ void iMouse(int button, int state, int mx, int my)
     {
         // place your codes here
         if(mx>=PLAY_X && mx<=PLAY_X+BTN_W && my>=PLAY_Y && my<=PLAY_Y+BTN_H){
-            k = 1;
-            pic1_x = 100; pic1_y = 62;
-            pic2_x = 745; pic2_y = 62;
-            vx1 = vy1 = vx2 = vy2 = 0;
-            state = state_2 = IDLE;
-            ball_moving = false;
-            pic_ballx = 475; pic_bally = 85;
-            player2_score  = 0;
-            player1_score  = 0;
-            iDecreaseVolume(bgSoundIdx, 80);
-            return;                /* Start play game */
+            k = P1_NAME_INPUT;      // Go to Player 1 Name Input screen
+            name_input_len = 0;     // Reset input string
+            name_input_str[0] = '\0';
+            return;
+                /* Start play game */
         }
         if(mx>=MODES_X && mx<=MODES_X+BTN_W && my>=MODES_Y && my<=MODES_Y+BTN_H){
             k=4;
@@ -1108,70 +1225,48 @@ function iKeyboard() is called whenever the user hits a key in keyboard.
 */
 void iKeyboard(unsigned char key)
 {
+    // Only handle single-press, non-movement actions here.
+    if (k == P1_NAME_INPUT || k == P2_NAME_INPUT) {
+        if (key == '\r') { // Enter key pressed
+            if (k == P1_NAME_INPUT) {
+                strcpy(player1_name, name_input_str);
+                k = P2_NAME_INPUT; // Move to player 2's turn
+                name_input_len = 0;
+                name_input_str[0] = '\0';
+            } else if (k == P2_NAME_INPUT) {
+                strcpy(player2_name, name_input_str);
+                // Now start the game
+                k = 1;
+                reset_game();
+                gameEnded = false;
+                count_timer = -1;
+                minute = 0;
+                second = 0;
+            }
+        } else if (key == '\b') { // Backspace key
+            if (name_input_len > 0) {
+                name_input_len--;
+                name_input_str[name_input_len] = '\0';
+            }
+        } else { // Any other character
+            if (name_input_len < 99) {
+                name_input_str[name_input_len] = key;
+                name_input_len++;
+                name_input_str[name_input_len] = '\0';
+            }
+        }
+        return; // Don't process other keys while typing name
+    }
     switch (key)
     {
     case 'm':
      k=0; 
      iIncreaseVolume(bgSoundIdx, 80);
+     mode_3min_selected = false;
+     gameEnded = false;
      break;
-if (k==1)
-{    case 'a':                                  
-    if (pic1_y == 62)
-        {
-            pic1_x -= 15;
-            state   = BACKWARD;
-        }
-        else
-        {
-            vx1 = -12;
-        }
-    break;
-    case 'd':                      
-    if (pic1_y == 62)            /* on ground → normal walk */
-        {
-            pic1_x += 15;
-            state   = FORWARD;
-        }
-        else                     
-        {
-            vx1 =  12;                
-        }
-    break;
-
-    case 'w':                      
-    if (pic1_y == 62)            
-        {
-            vy1   = 40;              
-            state = JUMP;
-        }
-    break;
-
-    case 's':                      
-    if (pic1_y > 62)             
-        {
-            vy1 -= 3;                
-        }
-    break;
-
-    case 'f':
-    if(pic1_y == 62 && state != KICK){
-        state = KICK;
-        kick_idx = 0;
-    }
-    break;
-
-    case '/':
-    if(pic2_y == 62 && state_2 != KICK){
-        state_2    = KICK;
-        kick_idx_2 = 0;
-    }
-    break;
-}
-    default:
-        break;
     }
 }
-
 
 /*
 function iSpecialKeyboard() is called whenver user hits special keys
@@ -1201,8 +1296,8 @@ int main(int argc, char *argv[])
     pic2_y = 62;
     pic_ballx = 475;
     pic_bally = 85;
-    populate_player1_images();
     iSetTimer(16, move_ball);
+    populate_player1_images();
     populate_player2_images();
     iSetTimer(60, update_player);
     iSetTimer(30,  gravityTick);
