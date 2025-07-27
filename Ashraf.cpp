@@ -298,7 +298,7 @@ void powerUpSpawner() {
 
         // Place it at a random position in the air
         currentPowerUpIcon.x = 300 + rand() % 400; // X between 300 and 700
-        currentPowerUpIcon.y = 350 + rand() % 100; // Y between 350 and 450
+        currentPowerUpIcon.y = 150 + rand() % 100; // Y between 150 and 250
     }
 }
 
@@ -664,41 +664,54 @@ void new_game(){
     iShowImage(300, 500, "assets/images/score_board1.png");
     // -- Draw Player 1 with effects --
     int p1_w = player1_width, p1_h = 123;
-    if (player1_effects.isSizeDown) { p1_w /= 2; p1_h /= 2; } // Make player smaller
+    if (player1_effects.isSizeDown) { 
+        p1_w /= 2; p1_h /= 2; 
+    
+    } // Make player smaller
     if (player1_effects.isFrozen) {
-        iShowImage(pic1_x, pic1_y, "assets/images/ice_cube.png"); // Show ice cube sprite
+        iShowImage(pic1_x, pic1_y, "assets/images/Freez1.png"); // Show ice cube sprite
     } else {
-        iShowImage(pic1_x, pic1_y, p1_w, p1_h, player1_image);
+        iShowImage(pic1_x, pic1_y, player1_image);
     }
     
     // -- Draw Player 2 with effects --
     int p2_w = player2_width, p2_h = 123;
     if (player2_effects.isSizeDown) { p2_w /= 2; p2_h /= 2; } // Make player smaller
     if (player2_effects.isFrozen) {
-        iShowImage(pic2_x, pic2_y, "assets/images/ice_cube.png"); // Show ice cube sprite
+        iShowImage(pic2_x, pic2_y, "assets/images/Freez2.png"); // Show ice cube sprite
     } else {
-        iShowImage(pic2_x, pic2_y, p2_w, p2_h, player2_image);
+        iShowImage(pic2_x, pic2_y, player2_image);
     }
 
     // -- Draw Ball with effects --
     if (isBallFiery) {
-        iShowImage(pic_ballx, pic_bally, "assets/images/fiery_ball.png");
+        iShowImage(pic_ballx, pic_bally, "assets/images/fire ball 001.png");
+        iShowImage(pic_ballx, pic_bally, "assets/images/fire ball 001.png");
+        iShowImage(pic_ballx, pic_bally, "assets/images/fire ball 001.png");
+        iShowImage(pic_ballx, pic_bally, "assets/images/fire ball 001.png");
+        iShowImage(pic_ballx, pic_bally, "assets/images/fire ball 001.png");
     } else {
         iShowImage(pic_ballx, pic_bally, "assets/images/Ball 02.png");
     }
-    iShowImage(pic1_x, pic1_y, player1_image);
-    iShowImage(pic2_x, pic2_y, player2_image);
-    iShowImage(pic_ballx, pic_bally, "assets/images/Ball 02.png");
     ex1 = (state==KICK ? 15 : 0);      // extra reach P1
     ex2 = (state_2==KICK ? 15 : 0);    // extra reach P2
 
     if( hit(pic1_x,pic1_y,player1_width+ex1,123, pic_ballx,pic_bally,ball_width,ball_width) ){
+        if (isBallFiery && lastPlayerToTouchBall == 2) {
+            if(pic1_x < pic_ballx) {
+                pic1_x -= 300;
+            } 
+            else if(pic1_x > pic_ballx){
+                pic1_x += 300;
+            }
+            isBallFiery = false; // Fire is extinguished on impact
+        }
         lastPlayerToTouchBall = 1; // P1 was the last to touch
         bool strong = (state == KICK);
         bvx = (pic_ballx >= pic1_x + 20 ) ?  20 : -20;
         // Check for SUPER KICK
         if (player1_effects.armedPowerUp == SUPER_KICK && strong) {
-            bvx *= 2; // Double the horizontal speed
+            bvx *= 3; // Double the horizontal speed
             bvy = 15; // Give it a powerful, low projectile arc
             isBallFiery = true;
             player1_effects.armedPowerUp = NONE; // Use the power-up
@@ -707,24 +720,24 @@ void new_game(){
         }
         iPlaySound(kick,false);
         // Check for knockback from Player 1's fiery ball
-        if (isBallFiery) {
-            if(pic1_x < pic_ballx) {
-            pic1_x -= 20;
-        } 
-        else if(pic1_x > pic_ballx){
-            pic1_x += 20;
-        }
-            isBallFiery = false; // Fire is extinguished on impact
-        }
     }
 
     if( hit(pic2_x-ex2,pic2_y,player2_width,123, pic_ballx,pic_bally,ball_width,ball_width) ){
+        if (isBallFiery && lastPlayerToTouchBall == 1) {
+            if(pic2_x < pic_ballx) {
+                pic2_x -= 300;
+            } 
+            else if(pic2_x > pic_ballx){
+                pic2_x += 300;
+            }
+            isBallFiery = false; // Fire is extinguished on impact
+        }
         lastPlayerToTouchBall = 2; // P2 was the last to touch
         bool strong = (state_2 == KICK);
         bvx = (pic_ballx >= pic2_x + player2_width/2) ?  20 : -20;
         // Check for SUPER KICK
         if (player2_effects.armedPowerUp == SUPER_KICK && strong) {
-            bvx *= 2;
+            bvx *= 3;
             bvy = 15;
             isBallFiery = true;
             player2_effects.armedPowerUp = NONE;
@@ -732,16 +745,6 @@ void new_game(){
             bvy = strong ? 20 : 0;
         }
         iPlaySound(kick,false);
-        // Check for knockback from Player 1's fiery ball
-        if (isBallFiery) {
-            if(pic2_x < pic_ballx) {
-            pic2_x -= 20;
-        } 
-        else if(pic2_x > pic_ballx){
-            pic2_x += 20;
-        }
-            isBallFiery = false; // Fire is extinguished on impact
-        }
     }
 
     ball_moving = (ball_speed>0);
@@ -1004,6 +1007,7 @@ void iDraw()
         // NEW: Player 1 Name Input Screen
     if (k == P1_NAME_INPUT) {
         iShowImage(0, 40, "assets/images/name.jpg"); // Use any background
+        iShowImage(20,520, "assets/images/Button1.png");
         iSetColor(255, 255, 0);
         iText(400, 400, "Enter Player 1 Name:", GLUT_BITMAP_TIMES_ROMAN_24);
         iRectangle(350, 300, 300, 50);
@@ -1019,6 +1023,7 @@ void iDraw()
     // NEW: Player 2 Name Input Screen
     if (k == P2_NAME_INPUT) {
         iShowImage(0, 40, "assets/images/name.jpg"); // Use any background
+        iShowImage(20,520, "assets/images/Button1.png");
         iSetColor(255, 255, 0);
         iText(400, 400, "Enter Player 2 Name:", GLUT_BITMAP_TIMES_ROMAN_24);
         iRectangle(350, 300, 300, 50);
@@ -1124,9 +1129,9 @@ void iDraw()
          handlePlayerInput();
          // --- Draw Power-Up Icon ---
         if (currentPowerUpIcon.isActive) {
-            if (currentPowerUpIcon.type == FREEZE) iShowImage(currentPowerUpIcon.x, currentPowerUpIcon.y, "assets/images/freeze_icon.png");
-            else if (currentPowerUpIcon.type == SUPER_KICK) iShowImage(currentPowerUpIcon.x, currentPowerUpIcon.y, "assets/images/kick_icon.png");
-            else if (currentPowerUpIcon.type == SIZE_DOWN) iShowImage(currentPowerUpIcon.x, currentPowerUpIcon.y, "assets/images/size_icon.png");
+            if (currentPowerUpIcon.type == FREEZE) iShowImage(currentPowerUpIcon.x, currentPowerUpIcon.y, "assets/images/Freez.png");
+            else if (currentPowerUpIcon.type == SUPER_KICK) iShowImage(currentPowerUpIcon.x, currentPowerUpIcon.y, "assets/images/Superkick.png");
+            else if (currentPowerUpIcon.type == SIZE_DOWN) iShowImage(currentPowerUpIcon.x, currentPowerUpIcon.y, "assets/images/shrink.png");
         }
     }
     if(k==5){
@@ -1270,6 +1275,16 @@ void iMouse(int button, int state, int mx, int my)
     if (k == HISTORY && button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
         // Assuming a back button at bottom-center
         if (mx >= 400 && mx <= 600 && my >= 50 && my <= 100) {
+            k = 0; // Go back to main menu
+        }
+    }
+    if (k == P1_NAME_INPUT && button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
+        if (mx >= 20 && mx <= 70 && my >= 520 && my <= 570) {
+            k = 0; // Go back to main menu
+        }
+    }
+    if (k == P2_NAME_INPUT && button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
+        if (mx >= 20 && mx <= 70 && my >= 520 && my <= 570) {
             k = 0; // Go back to main menu
         }
     }
