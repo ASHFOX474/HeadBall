@@ -1215,10 +1215,8 @@ void iDraw()
          iShowImage(940, 540, "assets/images/pause_icon.png");
 
          if (isPaused) {
-             iSetColor(0, 0, 0);
              
-             iFilledRectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-             
+             iShowImage(0, 40, "assets/images/name.jpg"); 
 
              iSetColor(200, 200, 200);
              iFilledRectangle(400, 350, 200, 50);
@@ -1240,8 +1238,9 @@ void iDraw()
                  }
              }
          }
+
     }
-    if(k==5){
+    if(k==5 ){
         iShowImage(0, 40, "assets/images/result.png");
         iSetColor(255,255,255);
         if(player1_score > player2_score)
