@@ -20,7 +20,7 @@ enum PowerUpType {
     NONE,
     FREEZE,
     SUPER_KICK,
-    SIZE_DOWN
+    DOUBLE_GOAL
 };
 
 
@@ -67,7 +67,7 @@ void effectsManager(void);
 #define BTN_H     60
 #define QUIT_W   214
 #define QUIT_H   45
-int m = 0, n = 0, x = 0, y = 0, z = 0;
+int m = 0, n = 0, x = 0, y = 0, z = 0, q = 0;
 int k = 0;
 /*----------------------------*/
 
@@ -76,15 +76,14 @@ bool saveGameExists = false;
 bool isPaused = false;
 bool showSaveConfirmation = false;
 int saveConfirmTimer = 0;
-bool suppressGoalSoundOnce = false; // New global flag
+bool suppressGoalSoundOnce = false;
 /*--------------------------------*/
 
 /*<---------Player Naming and history Variables----------->*/
-char player1_name[100] = "Player 1"; // Default name
-char player2_name[100] = "Player 2"; // Default name
+char player1_name[100] = "Player 1"; 
+char player2_name[100] = "Player 2";
 char name_input_str[100];
 int name_input_len = 0;
-// Game History Structure and Variables
 struct GameResult {
     char p1_name[100];
     char p2_name[100];
@@ -92,7 +91,7 @@ struct GameResult {
     int p2_score;
 };
 const int MAX_HISTORY = 5;
-GameResult history_log[MAX_HISTORY]; // Store up to 5 past games
+GameResult history_log[MAX_HISTORY];
 int history_count = 0;
 int next_history_slot = 0;
 /*<------------------------------------------------------>*/
@@ -101,11 +100,11 @@ int next_history_slot = 0;
 /*<------------------Goal Detection------------------>*/
 const int WINDOW_WIDTH   = 1000;
 const int WINDOW_HEIGHT  = 600;
-const int LEFT_GOAL_X    = 119;   // X-pos of the left goal line
-const int RIGHT_GOAL_X   = 873;   // X-pos of the right goal line
-const int GOAL_TOP_Y     = 250;   // Y-pos of the bottom of the top goal bar
-const int LEFT_BOUNDARY  = 20;    // X-pos of the back of the left goal net
-const int RIGHT_BOUNDARY = 960;   // X-pos of the back of the right goal net
+const int LEFT_GOAL_X    = 119;   
+const int RIGHT_GOAL_X   = 873;   
+const int GOAL_TOP_Y     = 250;
+const int LEFT_BOUNDARY  = 20;
+const int RIGHT_BOUNDARY = 960;
 /*----------------------------------------------------*/
 
 
@@ -115,37 +114,35 @@ bool mode_3min_selected = true;
 bool gameEnded = false;
 bool mode_score_selected = false;
 #define WIN_SCORE 5
-
 /*----------------------------------------------------------*/
 
 
 /*<--------------------------Setting menu--------------------------->*/
 Image settings_bg;
-/* button hit-box constants (match the artwork coordinates) */
-#define BG_MUSIC_PLUS_BUTTON_X  600   /* + for BG music */
+#define BG_MUSIC_PLUS_BUTTON_X  600 
 #define BG_MUSIC_PLUS_BUTTON_Y  370
-#define BG_MUSIC_MINUS_BUTTON_X 678   /* – for BG music */
+#define BG_MUSIC_MINUS_BUTTON_X 678 
 #define BG_MUSIC_MINUS_BUTTON_Y 370
 
-#define SOUND_MUSIC_PLUS_BUTTON_X  600   /* + for SFX */
+#define SOUND_MUSIC_PLUS_BUTTON_X  600
 #define SOUND_MUSIC_PLUS_BUTTON_Y  290
-#define SOUND_MUSIC_MINUS_BUTTON_X 678   /* – for SFX */
+#define SOUND_MUSIC_MINUS_BUTTON_X 678
 #define SOUND_MUSIC_MINUS_BUTTON_Y 295
 
-#define BTN_BACK_X   290   /* Back to menu rectangle */
+#define BTN_BACK_X   290
 #define BTN_BACK_Y   192
 #define BTN_BACK_W   355
 #define BTN_BACK_H    60
 /*----------------------------------------------------------------------*/
 
-/*sound*/
-int bgSoundIdx    = -1;      /* background music (loop)  */
-int cheerSoundIdx = -1;      /* one-shot goal cheer      */
+/*<-------------------------sound------------------------->*/
+int bgSoundIdx    = -1;
+int cheerSoundIdx = -1;
 int kickSoundIdx = -1;
 const char* BG_MUSIC_FILE  = "assets/sounds/bgm.WAV";
 const char* CHEER_FILE     = "assets/sounds/Goal.WAV";
 const char* kick = "assets/sounds/kick.WAV";
-/*------------*/
+/*---------------------------------------------------------*/
 
 /*<---------------------Loading-screen--------------------------->*/
 #define LOADING_TIME_MS 600
@@ -194,9 +191,9 @@ const char* GOAL_FILES[GOAL_FRAMES] = {
 Image goalImg[GOAL_FRAMES];
 int goalFrame = 0;
 bool goalAnimPlaying = false;
-/*-----------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 
-/*Player 1 image variable*/
+/*<------------Player 1 image variable-------------->*/
 int pic1_x, pic1_y;
 int idle_idx = 0;
 int jump_idx = 0;
@@ -213,10 +210,11 @@ char player1_kick[9][106];
 char *player1_image;
 int kick_idx = 0;
 int ex1, ex2;
-/*----------------------------*/
+Image bg;
+/*--------------------------------------------------*/
 
 
-/*Player 2 image variable*/
+/*<------------Player 2 image variable-------------->*/
 int pic2_x,pic2_y;
 int idle_idx_2 = 0;
 int jump_idx_2 = 0;
@@ -232,17 +230,17 @@ char player2_backward[10][124];
 char player2_kick[9][106];
 char *player2_image;
 int kick_idx_2 = 0;
-/*----------------------------*/
+/*------------------------------------------------*/
 
 
-/*Watch variable*/
+/*<-----Watch variable------->*/
 int count_timer=0;
 int second,minute;
 char timeText[20];
 /*---------------------------*/
 
 
-/*ball image variable*/
+/*<----ball image variable---->*/
 int pic_ballx,pic_bally;
 int ball_speed = 0;
 bool ball_moving = false;
@@ -252,23 +250,21 @@ int player1_width = 103;
 int player2_width = 103;
 int player1_score = 0;
 int player2_score  = 0;
-int bvx = 0, bvy = 0;     /* ball-velocity X/Y */
-const int BALL_GRAV = -2; /* change of Y*/
-const int GROUND_Y  = 85; /* initial y position of ball */
-const float RESTITUTION = 0.60f;   // Energy loss after every bounce
-const float FRICTION    = 0.97f;   // Friction
+int bvx = 0, bvy = 0;
+const int BALL_GRAV = -2;
+const int GROUND_Y  = 85;
+const float RESTITUTION = 0.60f;
+const float FRICTION    = 0.97f;
 /*----------------------------*/
 
-/*<Motion for player 1*/
-int vy1 = 0;          /* vertical speed in air*/
-int vx1 = 0;          /* horizontal speed in air   */
-/*Motion for player 2*/
-int vy2 = 0;          /* vertical speed in air*/
-int vx2 = 0;          /* horizontal speed in air*/
-
+/*<---------Motion for players-------->*/
+int vy1 = 0;
+int vx1 = 0;
+int vy2 = 0;
+int vx2 = 0;
+/*-----------------------------------*/
 
 /* <---------------- Power-Up System Variables ----------------> */
-// Manages the icon that appears on the screen
 struct PowerUpIcon {
     bool isActive;
     PowerUpType type;
@@ -276,96 +272,66 @@ struct PowerUpIcon {
     int width = 50;
     int height = 50;
 };
-
-// Manages the active effects on a player
 struct PlayerEffects {
-    PowerUpType armedPowerUp = NONE; // For armed power-ups like Super Kick
+    PowerUpType armedPowerUp = NONE;
     bool isFrozen = false;
-    bool isSizeDown = false;
-    int effectTimer = 0; // Counts down the duration of an effect
+    int effectTimer = 0;
 };
-
 PowerUpIcon currentPowerUpIcon;
 PlayerEffects player1_effects;
 PlayerEffects player2_effects;
-
-int lastPlayerToTouchBall = 0; // 1 for Player 1, 2 for Player 2
-bool isBallFiery = false;      // For the Super Kick visual
+int lastPlayerToTouchBall = 0;
+bool isBallFiery = false;
 /* ------------------------------------------------------------- */
 
-// This timer-based function tries to spawn a power-up icon periodically.
+
 void powerUpSpawner() {
     if (isPaused) return;
-    // Only spawn if there isn't one already active
     if (!currentPowerUpIcon.isActive) {
         currentPowerUpIcon.isActive = true;
-
-        // Randomly pick a type of power-up
-        int randType = rand() % 3; // Generates a number from 0 to 2
+        int randType = rand() % 3;
         if (randType == 0) currentPowerUpIcon.type = FREEZE;
         else if (randType == 1) currentPowerUpIcon.type = SUPER_KICK;
-        else currentPowerUpIcon.type = SIZE_DOWN;
-
-        // Place it at a random position in the air
-        currentPowerUpIcon.x = 300 + rand() % 400; // X between 300 and 700
-        currentPowerUpIcon.y = 150 + rand() % 100; // Y between 150 and 250
+        else currentPowerUpIcon.type = DOUBLE_GOAL;
+        currentPowerUpIcon.x = 300 + rand() % 400;
+        currentPowerUpIcon.y = 150 + rand() % 100;
     }
 }
 
-
-// Manages the countdown timers for active effects
 void effectsManager() {
     if (isPaused) return;
-    // Player 1 effects
     if (player1_effects.effectTimer > 0) {
         player1_effects.effectTimer--;
-    } else {
+    } 
+    else {
         player1_effects.isFrozen = false;
-        player1_effects.isSizeDown = false;
     }
-
-    // Player 2 effects
     if (player2_effects.effectTimer > 0) {
         player2_effects.effectTimer--;
-    } else {
+    } 
+    else {
         player2_effects.isFrozen = false;
-        player2_effects.isSizeDown = false;
     }
 }
-
-
-
-
 
 inline int pLeft (int px){ return px + 53; }
 inline int pRight(int px){ return px + 103; }
 void resolvePlayerCollision()
 {
-
     bool p1_is_grounded = (pic1_y < 70);
     bool p2_is_grounded = (pic2_y < 70);
     int g = (pic1_x<pic2_x) ? (pic2_x - pic1_x) : (pic1_x - pic2_x);
-    // Check for x-axis overlap AND if both players are on the ground
-    if( pRight(pic1_x) > pLeft(pic2_x) && pRight(pic2_x) > pLeft(pic1_x) && p1_is_grounded && p2_is_grounded)
-    {
-        // Calculate the amount of horizontal overlap.
+    if( pRight(pic1_x) > pLeft(pic2_x) && pRight(pic2_x) > pLeft(pic1_x) && p1_is_grounded && p2_is_grounded){
         int overlap = (pic1_x < pic2_x) ? (pRight(pic1_x) - pLeft(pic2_x)) : (pRight(pic2_x) - pLeft(pic1_x));
-
-        // Push each player back by half of the overlap to resolve the collision.
-        // The +1 ensures they separate completely and don't get stuck.
         int push_back = (overlap / 2) + 1;
-
-        if(pic1_x < pic2_x) {
-            // Player 1 is on the left, push them left. Player 2 is on the right, push them right.
+        if(pic1_x < pic2_x){
             pic1_x -= push_back;
             pic2_x += push_back;
-        } else {
-            // Player 1 is on the right, push them right. Player 2 is on the left, push them left.
+        } 
+        else {
             pic1_x += push_back;
             pic2_x -= push_back;
         }
-
-        // Stop their horizontal movement to prevent them from pushing through each other.
         vx1 = vx2 = 0;
     }
     else if((hit(pic1_x,pic1_y,player1_width+ex1,123, pic_ballx,pic_bally,ball_width,ball_width) || hit(pic2_x-ex2,pic2_y,player2_width,123, pic_ballx,pic_bally,ball_width,ball_width)) && (g <= 115)){
@@ -392,49 +358,35 @@ void gravityTick()
 {
 
     if (isPaused) return;
-    // Player 1 vertical movement
-    if (pic1_y > 62 || vy1 > 0)
-    {
+    if (pic1_y > 62 || vy1 > 0){
         vy1 -= 2;
         pic1_y += vy1;
-        if (pic1_y <= 62)
-        {
+        if (pic1_y <= 62){
             pic1_y = 62;
             vy1 = vx1 = 0;
             state = IDLE;
         }
     }
-    pic1_x += vx1; // Player 1 horizontal movement
-
-    // Player 2 vertical movement
-    if (pic2_y > 62 || vy2 > 0)
-    {
+    pic1_x += vx1;
+    if (pic2_y > 62 || vy2 > 0){
         vy2 -= 2;
         pic2_y += vy2;
-        if (pic2_y <= 62)
-        {
+        if (pic2_y <= 62){
             pic2_y = 62;
             vy2 = vx2 = 0;
             state_2 = IDLE;
         }
     }
-    pic2_x += vx2; // Player 2 horizontal movement
-
-    // Resolve collision between players
+    pic2_x += vx2;
     resolvePlayerCollision();
-
-    /* --- Player Boundary Collision --- */
-    // Player 1 boundary check
     if (pic1_x < LEFT_BOUNDARY) {
         pic1_x = LEFT_BOUNDARY;
-        vx1 = 0; // Stop horizontal movement
+        vx1 = 0;
     }
     if (pic1_x + player1_width > WINDOW_WIDTH) {
         pic1_x = WINDOW_WIDTH - player1_width;
         vx1 = 0;
     }
-
-    // Player 2 boundary check
     if (pic2_x < 0) {
         pic2_x = 0;
         vx2 = 0;
@@ -445,39 +397,29 @@ void gravityTick()
     }
 }
 
-bool hit(int px, int py, int pw, int ph, int bx, int by, int bw, int bh)
-{
+bool hit(int px, int py, int pw, int ph, int bx, int by, int bw, int bh) {
     return !( px+pw < bx || bx+bw < px+53 || py+ph < by || by+bh < py+27 );
 }
 
 void resetField() {
-    // --- Start of conditional sound and animation logic ---
     if (!suppressGoalSoundOnce) {
-        goalAnimPlaying = true; // Only set animation flags if NOT suppressing
-        goalFrame = 0;          // Only set animation flags if NOT suppressing
-        cheerSoundIdx = iPlaySound(CHEER_FILE, false); // Play sound only if NOT suppressing
-    } else {
-        suppressGoalSoundOnce = false; // Reset the flag immediately after suppressing
+        goalAnimPlaying = true;
+        goalFrame = 0;
+        cheerSoundIdx = iPlaySound(CHEER_FILE, false);
+    } 
+    else {
+        suppressGoalSoundOnce = false;
     }
-    // --- End of conditional sound and animation logic ---
-
-    // Center the ball (These lines remain UNCHANGED and always execute)
     bvx = bvy = 0;
     pic_ballx = 475;
     pic_bally = GROUND_Y;
-
-    // Reset ball motion (These lines remain UNCHANGED and always execute)
     ball_speed = 0;
     ball_dir = 0;
     ball_moving = false;
-
-    // Reset player 1 (These lines remain UNCHANGED and always execute)
     pic1_x = 100;
     pic1_y = 62;
     vx1 = vy1 = 0;
     state = IDLE;
-
-    // Reset player 2 (These lines remain UNCHANGED and always execute)
     pic2_x = 745;
     pic2_y = 62;
     vx2 = vy2 = 0;
@@ -502,10 +444,8 @@ void move_ball()
 {
     if (isPaused) return;
     if(bvx==0 && bvy==0) return;
-
     pic_ballx += bvx;
     pic_bally += bvy;
-
     bvy += BALL_GRAV;
 
     if(pic_bally <= GROUND_Y){
@@ -534,17 +474,28 @@ void move_ball()
     const int GOAL_BAR_THICKNESS = 15;
 
     if (pic_ballx <= LEFT_GOAL_X) {
+
         if (pic_bally + ball_width < GOAL_TOP_Y) {
-            ++player2_score;
+
+            if (player2_effects.armedPowerUp == DOUBLE_GOAL) {
+                player2_score += 2;
+                player2_effects.armedPowerUp = NONE;
+            }
+            else {
+                player2_score++;
+            }
             resetField();
             return;
         }
+
         else if (pic_bally < GOAL_TOP_Y + GOAL_BAR_THICKNESS) {
             bvy *= -RESTITUTION;
+
             if (bvy > 0) {
                 pic_bally = GOAL_TOP_Y + GOAL_BAR_THICKNESS;
             }
         }
+
         if (pic_ballx < LEFT_BOUNDARY) {
             pic_ballx = LEFT_BOUNDARY;
             bvx *= -RESTITUTION;
@@ -552,20 +503,32 @@ void move_ball()
     }
 
     if (pic_ballx + ball_width >= RIGHT_GOAL_X) {
+
         if (pic_bally + ball_width < GOAL_TOP_Y) {
-            ++player1_score;
+
+           if (player1_effects.armedPowerUp == DOUBLE_GOAL) {
+                player1_score += 2;
+                player1_effects.armedPowerUp = NONE;
+            } 
+            else {
+                player1_score++;
+            }
             resetField();
             return;
         }
+
         else if (pic_bally < GOAL_TOP_Y + GOAL_BAR_THICKNESS) {
             bvy *= -RESTITUTION;
+
             if (bvy > 0) {
                 pic_bally = GOAL_TOP_Y + GOAL_BAR_THICKNESS;
             }
+
             if (bvx < 0 && pic_ballx + ball_width > RIGHT_GOAL_X) {
                 pic_ballx = RIGHT_GOAL_X - ball_width;
             }
         }
+
         if (pic_ballx + ball_width > RIGHT_BOUNDARY) {
             pic_ballx = RIGHT_BOUNDARY - ball_width;
             bvx *= -RESTITUTION;
@@ -574,58 +537,69 @@ void move_ball()
 
     if (currentPowerUpIcon.isActive) {
         if (hit(currentPowerUpIcon.x, currentPowerUpIcon.y, currentPowerUpIcon.width, currentPowerUpIcon.height, pic_ballx, pic_bally, ball_width, ball_width)) {
-
             PowerUpType collectedType = currentPowerUpIcon.type;
             currentPowerUpIcon.isActive = false;
 
             if (lastPlayerToTouchBall == 1) {
+
                 if (collectedType == SUPER_KICK) {
                     player1_effects.armedPowerUp = SUPER_KICK;
-                } else if (collectedType == FREEZE) {
+                } 
+
+                else if (collectedType == FREEZE) {
                     player2_effects.isFrozen = true;
                     player2_effects.effectTimer = 30;
-                } else if (collectedType == SIZE_DOWN) {
-                    player2_effects.isSizeDown = true;
-                    player2_effects.effectTimer = 50;
+                } 
+
+                else if (collectedType == DOUBLE_GOAL) {
+                    player1_effects.armedPowerUp = DOUBLE_GOAL;
                 }
-            } else if (lastPlayerToTouchBall == 2) {
+            } 
+
+            else if (lastPlayerToTouchBall == 2) {
+
                 if (collectedType == SUPER_KICK) {
                     player2_effects.armedPowerUp = SUPER_KICK;
-                } else if (collectedType == FREEZE) {
+                } 
+
+                else if (collectedType == FREEZE) {
                     player1_effects.isFrozen = true;
                     player1_effects.effectTimer = 30;
-                } else if (collectedType == SIZE_DOWN) {
-                    player1_effects.isSizeDown = true;
-                    player1_effects.effectTimer = 50;
+                } 
+
+                else if (collectedType == DOUBLE_GOAL) {
+                    player2_effects.armedPowerUp = DOUBLE_GOAL;
                 }
             }
         }
     }
 }
 
-
-/* Replace your old handlePlayerInput function with this one */
 void handlePlayerInput()
 {
     if (isPaused) return;
-    if (k != 1) return; // Only handle game input if the game is running
+    if (k != 1) return;
 
-    // --- Player 1 Controls (WASD + F) ---
     if (!player1_effects.isFrozen){
+
         if (isKeyPressed('d') ||isKeyPressed('D')  ) {
             if (pic1_y == 62) { pic1_x += 15; state = FORWARD; }
             else { vx1 = 12; }
         }
+        
         if (isKeyPressed('a') || isKeyPressed('A') ) {
             if (pic1_y == 62) { pic1_x -= 15; state = BACKWARD; }
             else { vx1 = -12; }
         }
+
         if (isKeyPressed('w') || isKeyPressed('W') ) {
             if (pic1_y == 62) { vy1 = 40; state = JUMP; }
         }
+
         if (isKeyPressed('s') || isKeyPressed('S') ) {
             if (pic1_y > 62) { vy1 -= 3; }
         }
+
         if (isKeyPressed('f') || isKeyPressed('F')) {
             if (pic1_y == 62 && state != KICK) { state = KICK; kick_idx = 0; }
         }
@@ -634,22 +608,26 @@ void handlePlayerInput()
         vx1 = 0;
     }
 
-    // --- Player 2 Controls (Arrow Keys + /) ---
     if (!player2_effects.isFrozen){
+
         if (isSpecialKeyPressed(GLUT_KEY_RIGHT)) {
             if (pic2_y == 62) { pic2_x += 15; state_2 = BACKWARD; }
             else { vx2 = 12; }
         }
+
         if (isSpecialKeyPressed(GLUT_KEY_LEFT)) {
             if (pic2_y == 62) { pic2_x -= 15; state_2 = FORWARD; }
             else { vx2 = -12; }
         }
+
         if (isSpecialKeyPressed(GLUT_KEY_UP)) {
             if (pic2_y == 62) { vy2 = 40; state_2 = JUMP; }
         }
+
         if (isSpecialKeyPressed(GLUT_KEY_DOWN)) {
             if (pic2_y > 62) { vy2 -= 3; }
         }
+
         if (isKeyPressed('/')) {
             if (pic2_y == 62 && state_2 != KICK) { state_2 = KICK; kick_idx_2 = 0; }
         }
@@ -659,93 +637,91 @@ void handlePlayerInput()
     }
 }
 
-
 void Watch(){
     if (isPaused) return;
+
     if(k==1){
         count_timer++;
         second = count_timer % 60;
         minute = count_timer / 60;
+
         if(count_timer >= GAME_TIME_SECONDS){
             gameEnded = true;
             k = 5;
-            addResultToHistory(); // Add result to log
-            saveHistory();        // Save to file
+            addResultToHistory();
+            saveHistory();
         }
     }    
-    sprintf(timeText, "%02d:%02d", minute, second); // 2-digit format    
+    sprintf(timeText, "%02d:%02d", minute, second);   
 }
 
 void new_game(){
     iShowImage(0, 40, "assets/images/bg.png");
     iShowImage(300, 500, "assets/images/score_board1.png");
-    // -- Draw Player 1 with effects --
-    int p1_w = player1_width, p1_h = 123;
-    if (player1_effects.isSizeDown) { 
-        p1_w /= 2; p1_h /= 2; 
-    
-    } // Make player smaller
+
     if (player1_effects.isFrozen) {
-        iShowImage(pic1_x, pic1_y, "assets/images/Freez1.png"); // Show ice cube sprite
-    } else {
+        iShowImage(pic1_x, pic1_y, "assets/images/Freez1.png");
+    } 
+    else {
         iShowImage(pic1_x, pic1_y, player1_image);
     }
     
-    // -- Draw Player 2 with effects --
-    int p2_w = player2_width, p2_h = 123;
-    if (player2_effects.isSizeDown) { p2_w /= 2; p2_h /= 2; } // Make player smaller
     if (player2_effects.isFrozen) {
-        iShowImage(pic2_x, pic2_y, "assets/images/Freez2.png"); // Show ice cube sprite
-    } else {
+        iShowImage(pic2_x, pic2_y, "assets/images/Freez2.png");
+    } 
+    else {
         iShowImage(pic2_x, pic2_y, player2_image);
     }
 
-    // -- Draw Ball with effects --
     if (isBallFiery) {
         iShowImage(pic_ballx, pic_bally, "assets/images/fire ball 001.png");
         iShowImage(pic_ballx, pic_bally, "assets/images/fire ball 001.png");
         iShowImage(pic_ballx, pic_bally, "assets/images/fire ball 001.png");
         iShowImage(pic_ballx, pic_bally, "assets/images/fire ball 001.png");
         iShowImage(pic_ballx, pic_bally, "assets/images/fire ball 001.png");
-    } else {
+    } 
+    else {
         iShowImage(pic_ballx, pic_bally, "assets/images/Ball 02.png");
     }
-    ex1 = (state==KICK ? 15 : 0);      // extra reach P1
-    ex2 = (state_2==KICK ? 15 : 0);    // extra reach P2
+    ex1 = (state==KICK ? 15 : 0);
+    ex2 = (state_2==KICK ? 15 : 0);
 
     if( hit(pic1_x,pic1_y,player1_width+ex1,123, pic_ballx,pic_bally,ball_width,ball_width) ){
+
         if (isBallFiery && lastPlayerToTouchBall == 2) {
+
             if(pic1_x < pic_ballx) {
-                pic1_x -= 300;
+                pic1_x -= 30;
             } 
+
             else if(pic1_x > pic_ballx){
-                pic1_x += 300;
+                pic1_x += 30;
             }
-            isBallFiery = false; // Fire is extinguished on impact
+            isBallFiery = false;
         }
-        lastPlayerToTouchBall = 1; // P1 was the last to touch
+        lastPlayerToTouchBall = 1;
         bool strong = (state == KICK);
         bvx = (pic_ballx >= pic1_x + 20 ) ?  20 : -20;
-        // Check for SUPER KICK
+        
         if (player1_effects.armedPowerUp == SUPER_KICK && strong) {
-            bvx *= 3; // Double the horizontal speed
-            bvy = 15; // Give it a powerful, low projectile arc
+            bvx *= 3;
+            bvy = 15;
             isBallFiery = true;
-            player1_effects.armedPowerUp = NONE; // Use the power-up
-        } else {
+            player1_effects.armedPowerUp = NONE;
+        } 
+        else {
             bvy = strong ? 20 : 0;
         }
         iPlaySound(kick,false);
-        // Check for knockback from Player 1's fiery ball
     }
 
     if( hit(pic2_x-ex2,pic2_y,player2_width,123, pic_ballx,pic_bally,ball_width,ball_width) ){
         if (isBallFiery && lastPlayerToTouchBall == 1) {
             if(pic2_x < pic_ballx) {
-                pic2_x -= 300;
+                pic2_x += 30;
             } 
             else if(pic2_x > pic_ballx){
-                pic2_x += 300;
+                pic2_x += 30;
             }
             isBallFiery = false; // Fire is extinguished on impact
         }
@@ -784,133 +760,101 @@ void update_player(){
 
 void populate_player1_images(void)
 {
-    for (int i = 0; i < 18; i++)
-    {
+    for (int i = 0; i < 18; i++){
         sprintf(player1_idle[i], "assets/Characters/Character 01 - Brazil/PNG Sequences/Idle/Idle_%03d.png", i);
     }
-    for (int i = 0; i < 5; i++)
-    {
+    for (int i = 0; i < 5; i++){
         sprintf(player1_jump[i], "assets/Characters/Character 01 - Brazil/PNG Sequences/Jump/Jump_%03d.png", i);
     }
-    for (int i = 0; i < 5; i++)
-    {
+    for (int i = 0; i < 5; i++){
         sprintf(player1_falldown[i], "assets/Characters/Character 01 - Brazil/PNG Sequences/Falling Down/Falling Down_%03d.png", i);
     }   
-    for (int i = 0; i < 5; i++)
-    {
+    for (int i = 0; i < 5; i++){
         sprintf(player1_forward[i], "assets/Characters/Character 01 - Brazil/PNG Sequences/Move Forward/Move Forward_%03d.png", i);
     }
-    for (int i = 0; i < 5; i++)
-    {
+    for (int i = 0; i < 5; i++){
         sprintf(player1_kick[i], "assets/Characters/Character 01 - Brazil/PNG Sequences/Kick/Kick_%03d.png", i);
     }
-    for (int i = 0; i < 5; i++)
-    {
+    for (int i = 0; i < 5; i++){
         sprintf(player1_backward[i], "assets/Characters/Character 01 - Brazil/PNG Sequences/Move Backward/Move Backward_%03d.png", i);
     }
-
     player1_image = player1_idle[0];
 }
 
 void populate_player2_images(void)
 {
-    for (int i = 0; i < 18; i++)
-    {
+    for (int i = 0; i < 18; i++){
         sprintf(player2_idle[i], "assets/Characters/Character 02 - England/PNG Sequences/Idle/Idle_%03d.png", i);
     }
-    for (int i = 0; i < 5; i++)
-    {
+    for (int i = 0; i < 5; i++){
         sprintf(player2_jump[i], "assets/Characters/Character 02 - England/PNG Sequences/Jump/Jump_%03d.png", i);
     }
-    for (int i = 0; i < 5; i++)
-    {
+    for (int i = 0; i < 5; i++){
         sprintf(player2_falldown[i], "assets/Characters/Character 02 - England/PNG Sequences/Falling Down/Falling Down_%03d.png", i);
     }   
-    for (int i = 0; i < 5; i++)
-    {
+    for (int i = 0; i < 5; i++){
         sprintf(player2_forward[i], "assets/Characters/Character 02 - England/PNG Sequences/Move Forward/Move Forward_%03d.png", i);
     }
-    for (int i = 0; i < 5; i++)
-    {
+    for (int i = 0; i < 5; i++){
         sprintf(player2_kick[i], "assets/Characters/Character 02 - England/PNG Sequences/Kick/Kick_%03d.png", i);
     }
-    for (int i = 0; i < 5; i++)
-    {
+    for (int i = 0; i < 5; i++){
         sprintf(player2_backward[i], "assets/Characters/Character 02 - England/PNG Sequences/Move Backward/Move Backward_%03d.png", i);
     }
-
     player2_image = player2_idle[0];
 }
 
-
-Image bg;
-/*
-function iDraw() is called again and again by the system.
-*/
 void loadresources()
 {
     iLoadImage(&bg, "assets/images/Menu.png");
-        for (int i = 0; i < GOAL_FRAMES; i++) {
+    for (int i = 0; i < GOAL_FRAMES; i++) {
         iLoadImage(&goalImg[i], GOAL_FILES[i]);
     }
-   iLoadImage(&settings_bg, "assets/images/setting.JPG");
-
-
+    iLoadImage(&settings_bg, "assets/images/setting.JPG");
 }
-void draw_settings()
-{
-    /* background stadium blur remains visible underneath */
-    iShowImage(0, 40, "assets/images/setting.JPG");
 
-    iSetColor(255,255,255);
-    iRectangle(290,192,355,60);
+void draw_settings(){
+    iShowImage(0, 40, "assets/images/setting.JPG");
 }
 
 void blink(){
     b=!b;
 }
 
-void drawLoadingScreen()
-{
+void drawLoadingScreen(){
     iShowImage(0, 40, LOADING_BG);
     if(!loadingStarted){
         iSetColor(255,255,255);
-
         if(b==0){
             iText(430, 70, "Click to continue", GLUT_BITMAP_9_BY_15);
             iText(431, 71, "Click to continue", GLUT_BITMAP_9_BY_15);
         }
         return;
     }
-
     int cx[3] = { 440, 500, 560 };
-
     iSetColor(255,255,255);
     for(int i=0;i<3;i++){
         iFilledCircle(cx[i], LOADING_Y, LOADING_RADIUS);
     }
-
     iShowImage(cx[currentCircle]-LOADING_RADIUS,LOADING_Y-LOADING_RADIUS,BALL_IMG);
 }
 
-/*<--Loading Screen Timer-->*/
-void loadingTick()
-{
+void loadingTick(){
     if(!loadingStarted || loadingDone) return;
     loadingTimer += 20;
+
     if( loadingTimer % BALL_JUMP_MS == 0 ){
         currentCircle = (currentCircle+1)%3;
     }
+
     if( loadingTimer >= LOADING_TIME_MS ){
         loadingDone = true;
         k = 0;
         iIncreaseVolume(bgSoundIdx, 100);
     }
 }
-/*--------------------------*/
 
-void drawGoalOverlay()
-{
+void drawGoalOverlay() {
     if (!goalAnimPlaying) return;
     int w = GOAL_SIZE[goalFrame];
     int h = w;
@@ -919,40 +863,31 @@ void drawGoalOverlay()
     iShowImage(x, y, GOAL_FILES[goalFrame]);
 }
 
-void goalTick()
-{
+void goalTick() {
     if (!goalAnimPlaying) return;
-
     goalFrame++;
-    if (goalFrame >= GOAL_FRAMES)
-    {
+    if (goalFrame >= GOAL_FRAMES){
         goalAnimPlaying = false;
         goalFrame = 0;
     }
 }
 
-
-// Adds the most recent game result to our history log in a circular way
 void addResultToHistory() {
-    // Place the new result into the next available slot
     strcpy(history_log[next_history_slot].p1_name, player1_name);
     strcpy(history_log[next_history_slot].p2_name, player2_name);
     history_log[next_history_slot].p1_score = player1_score;
     history_log[next_history_slot].p2_score = player2_score;
-
-    // Move the "next slot" marker forward, wrapping around from 4 back to 0
     next_history_slot = (next_history_slot + 1) % MAX_HISTORY;
 
-    // The total number of items in history grows until it hits the max
     if (history_count < MAX_HISTORY) {
         history_count++;
     }
 }
 
-
 void saveGameState() {
     if (k != 1) return;
     FILE *fp = fopen("savegame.txt", "w");
+
     if (fp != NULL) {
         fprintf(fp, "%d\n", player1_score);
         fprintf(fp, "%d\n", player2_score);
@@ -977,28 +912,22 @@ bool loadGameState() {
     return false;
 }
 
-// Saves the history log to a human-readable text file
 void saveHistory() {
     FILE *fp = fopen("history.txt", "w");
+
     if (fp != NULL) {
-        // We must write the records in chronological order.
-        // The oldest record is at the current 'next_history_slot' index.
         for (int i = 0; i < history_count; i++) {
             int index = (next_history_slot + i) % MAX_HISTORY;
-
             char temp_p1_name[100];
             char temp_p2_name[100];
             strcpy(temp_p1_name, history_log[index].p1_name);
             strcpy(temp_p2_name, history_log[index].p2_name);
-
-            // Replace spaces with underscores for safe file storage
             for (int j = 0; temp_p1_name[j] != '\0'; j++) {
                 if (temp_p1_name[j] == ' ') temp_p1_name[j] = '_';
             }
             for (int j = 0; temp_p2_name[j] != '\0'; j++) {
                 if (temp_p2_name[j] == ' ') temp_p2_name[j] = '_';
             }
-
             fprintf(fp, "%s %s %d %d\n",
                     temp_p1_name,
                     temp_p2_name,
@@ -1009,18 +938,11 @@ void saveHistory() {
     }
 }
 
-// Loads the history log from the text file when the game starts
 void loadHistory() {
     FILE *fp = fopen("history.txt", "r");
     if (fp != NULL) {
-        history_count = 0; // Reset count before loading
-        while (fscanf(fp, "%s %s %d %d",
-                      history_log[history_count].p1_name,
-                      history_log[history_count].p2_name,
-                      &history_log[history_count].p1_score,
-                      &history_log[history_count].p2_score) != EOF)
-        {
-            // Replace underscores back with spaces
+        history_count = 0;
+        while (fscanf(fp, "%s %s %d %d", history_log[history_count].p1_name, history_log[history_count].p2_name, &history_log[history_count].p1_score, &history_log[history_count].p2_score) != EOF) {
             char* p1_name = history_log[history_count].p1_name;
             for (int j = 0; p1_name[j] != '\0'; j++) {
                 if (p1_name[j] == '_') p1_name[j] = ' ';
@@ -1029,74 +951,64 @@ void loadHistory() {
             for (int j = 0; p2_name[j] != '\0'; j++) {
                 if (p2_name[j] == '_') p2_name[j] = ' ';
             }
-
             history_count++;
             if (history_count >= MAX_HISTORY) break;
         }
         fclose(fp);
-
-        // After loading, the next slot is simply the number of items read,
-        // using modulo to handle the case where the history is full.
         next_history_slot = history_count % MAX_HISTORY;
     }
 }
 
+void iDraw(){
 
-void iDraw()
-{
-    // place your drawing codes here
     iClear();
     if(!loadingDone){
         drawLoadingScreen();
         return;
     }
-        // NEW: Player 1 Name Input Screen
+
     if (k == P1_NAME_INPUT) {
-        iShowImage(0, 40, "assets/images/name.jpg"); // Use any background
+        iShowImage(0, 40, "assets/images/name.jpg");
         iShowImage(20,520, "assets/images/Button1.png");
         iSetColor(255, 255, 0);
         iText(400, 400, "Enter Player 1 Name:", GLUT_BITMAP_TIMES_ROMAN_24);
         iRectangle(350, 300, 300, 50);
         iSetColor(255, 255, 255);
         iText(360, 320, name_input_str, GLUT_BITMAP_TIMES_ROMAN_24);
-        // Blinking cursor
+
         if (b==0) {
             iText(360 + glutBitmapLength(GLUT_BITMAP_TIMES_ROMAN_24, (const unsigned char*)name_input_str), 320, "_", GLUT_BITMAP_TIMES_ROMAN_24);
         }
         return;
     }
 
-    // NEW: Player 2 Name Input Screen
     if (k == P2_NAME_INPUT) {
-        iShowImage(0, 40, "assets/images/name.jpg"); // Use any background
+        iShowImage(0, 40, "assets/images/name.jpg");
         iShowImage(20,520, "assets/images/Button1.png");
         iSetColor(255, 255, 0);
         iText(400, 400, "Enter Player 2 Name:", GLUT_BITMAP_TIMES_ROMAN_24);
         iRectangle(350, 300, 300, 50);
         iSetColor(255, 255, 255);
         iText(360, 320, name_input_str, GLUT_BITMAP_TIMES_ROMAN_24);
-        // Blinking cursor
         if (b==0) {
             iText(360 + glutBitmapLength(GLUT_BITMAP_TIMES_ROMAN_24, (const unsigned char*)name_input_str), 320, "_", GLUT_BITMAP_TIMES_ROMAN_24);
         }
         return;
     }
-    
-    // NEW: History Screen
+
     if (k == HISTORY) {
         iShowImage(0, 40, "assets/images/HIS.jpg");
         iSetColor(255, 0,0);
         int newest_game_index = (next_history_slot - 1 + MAX_HISTORY) % MAX_HISTORY;
+
         for (int i = 0; i < history_count; i++) {
             char history_text[250];
-            // Display latest game at the top
             int index = (newest_game_index - i + MAX_HISTORY) % MAX_HISTORY;
             sprintf(history_text, "%d        %d", history_log[index].p1_score, history_log[index].p2_score);
             iText(170, 425 - i * 65, history_log[index].p1_name, GLUT_BITMAP_TIMES_ROMAN_24);
             iText(457, 425 - i * 65, history_text, GLUT_BITMAP_TIMES_ROMAN_24);
             iText(580, 425 - i * 65, history_log[index].p2_name, GLUT_BITMAP_TIMES_ROMAN_24);
         }
-        // Draw a Back button
         iSetColor(255, 0, 0);
         iFilledRectangle(400, 50, 200, 50);
         iSetColor(255, 255, 255);
@@ -1104,280 +1016,239 @@ void iDraw()
         return;
     }
     
-    if(k==5){ // UPDATED: Result Screen
+    if(k==5){
         iShowImage(0, 40, "assets/images/result.png");
         iSetColor(255,255,255);
         char result_text[200];
-        if(player1_score > player2_score)
-            sprintf(result_text, "%s WINS!", player1_name);
-        else if(player2_score > player1_score)
-            sprintf(result_text, "%s WINS!", player2_name);
-        else
-            sprintf(result_text, "IT'S A DRAW!");
-            
-        iText(450, 300, result_text, GLUT_BITMAP_TIMES_ROMAN_24);
+        if(b==0) iText(440,15,"Press M to goto Menu",GLUT_BITMAP_HELVETICA_18);
+        if(player1_score > player2_score) sprintf(result_text, "%s WINS!", player1_name);
+
+        else if(player2_score > player1_score) sprintf(result_text, "%s WINS!", player2_name);
+
+        else sprintf(result_text, "IT'S A DRAW!");           
+        iText(700, 300, result_text, GLUT_BITMAP_TIMES_ROMAN_24);
         return;
     }
+
     if(k==3){
         draw_settings();
         return;
     }
+
     if(k==4){
         iShowImage(0,40,"assets/images/Mode.png");
-        iSetColor(255, 255, 0); // Yellow for the highlight
-    
-        // If score mode is selected, draw a rectangle around it
+        iSetColor(255, 255, 0);
+
         if (mode_score_selected) {
             iRectangle(228, 241, 428, 71); 
-        } 
-        // If 3-minute mode is selected, draw a rectangle around it
+        }
+
         else if (mode_3min_selected) {
             iRectangle(227, 340, 428, 68);
         }
         return;
     }
-   if (k == 0) { // If currently on the Main Menu screen
-        iShowImage(0,40,"assets/images/Menu.png"); // This is your background image with six boxes
 
-        // You only had one iRectangle call for SET_X/Y in your snippet.
-        // If you intend to draw rectangles for ALL buttons, you will need to add more iRectangle calls here.
-        // Otherwise, this one will draw a rectangle only around the SETTINGS button.
-        //iRectangle(SET_X, SET_Y, BTN_W, BTN_H); // Example rectangle, adjust as needed
+    if (k == 0) {
+        iShowImage(0,40,"assets/images/Menu.png");
+        iSetColor(255,255,255);
 
-        iSetColor(255,255,255); // White color for default (non-highlighted) text
+        if(!m)iText(PLAY_X+145,  PLAY_Y+25,  "PLAY",   GLUT_BITMAP_HELVETICA_18);
+        if (saveGameExists){ if(!q) iText(CONTINUE_X + 125, CONTINUE_Y + 25, "CONTINUE", GLUT_BITMAP_HELVETICA_18);}
+        else {if(!q) iText(CONTINUE_X + 95, CONTINUE_Y + 25, "NO SAVED GAMES", GLUT_BITMAP_HELVETICA_18);}
+        if(!n)iText(MODES_X+140, MODES_Y+25, "MODES",   GLUT_BITMAP_HELVETICA_18);
+        if(!x)iText(HIST_X+130,  HIST_Y+25,  "HISTORY", GLUT_BITMAP_HELVETICA_18);
+        if(!y)iText(SET_X+130,   SET_Y+25,   "SETTING", GLUT_BITMAP_HELVETICA_18);
+        if(!z)iText(QUIT_X+80,  QUIT_Y+18,  "QUIT",    GLUT_BITMAP_HELVETICA_18);
 
-        // --- START EDITS FOR BUTTON TEXT DISPLAY LOGIC ---
+        iSetColor(255,255,0);
 
-        // NEW GAME button text (always at PLAY_X, PLAY_Y)
-        if(!m) iText(PLAY_X + 125, PLAY_Y + 25, "NEW GAME", GLUT_BITMAP_HELVETICA_18);
-
-        // CONTINUE button text (at CONTINUE_X, CONTINUE_Y)
-        if (saveGameExists) {
-            if(!n) iText(CONTINUE_X + 125, CONTINUE_Y + 25, "CONTINUE", GLUT_BITMAP_HELVETICA_18);
-        } else {
-            // Display "NO SAVED GAMES" text if no save game exists
-            iText(CONTINUE_X + (BTN_W / 2) - 80, CONTINUE_Y + (BTN_H / 2) - 10, "NO SAVED GAMES", GLUT_BITMAP_HELVETICA_18);
+        if(m){
+            iText(PLAY_X+140, PLAY_Y+22, "PLAY", GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(PLAY_X+141, PLAY_Y+23, "PLAY", GLUT_BITMAP_TIMES_ROMAN_24);
         }
-
-        // MODES button text (always at MODES_X, MODES_Y)
-        if(!x) iText(MODES_X + 140, MODES_Y + 25, "MODES", GLUT_BITMAP_HELVETICA_18);
-
-        // --- END EDITS FOR BUTTON TEXT DISPLAY LOGIC ---
-
-        // Original History, Settings, Quit button text (assuming these remain as is based on your previous code)
-        if(!y) iText(HIST_X + 130, HIST_Y + 25, "HISTORY", GLUT_BITMAP_HELVETICA_18);
-        if(!z) iText(SET_X + 130, SET_Y + 25, "SETTING", GLUT_BITMAP_HELVETICA_18);
-        
-        // For the top-left QUIT button
-        iText(QUIT_X + 80, QUIT_Y + 18, "QUIT", GLUT_BITMAP_HELVETICA_18);
-
-
-        iSetColor(255,255,0); // Yellow color for highlighted text
-
-        // --- START EDITS FOR HIGHLIGHTED TEXT ---
-
-        if(m){ // New Game highlight
-            iText(PLAY_X + 120, PLAY_Y + 22, "NEW GAME", GLUT_BITMAP_TIMES_ROMAN_24);
-        }
-        if(n){ // Continue highlight (only if save game exists)
-            if (saveGameExists) {
-                iText(CONTINUE_X + 120, CONTINUE_Y + 22, "CONTINUE", GLUT_BITMAP_TIMES_ROMAN_24);
+        if(q){
+            if(saveGameExists){
+                iText(CONTINUE_X+120, CONTINUE_Y+22, "CONTINUE", GLUT_BITMAP_TIMES_ROMAN_24);
+                iText(CONTINUE_X+121, CONTINUE_Y+23, "CONTINUE", GLUT_BITMAP_TIMES_ROMAN_24);
             }
-            // No highlight text for "NO SAVED GAMES" as it's static
+            else{
+                iText(CONTINUE_X+70, CONTINUE_Y+22, "NO SAVED GAMES", GLUT_BITMAP_TIMES_ROMAN_24);
+                iText(CONTINUE_X+71, CONTINUE_Y+23, "NO SAVED GAMES", GLUT_BITMAP_TIMES_ROMAN_24);
+            }
         }
-        if(x){ // Modes highlight
-            iText(MODES_X + 133, MODES_Y + 22, "MODES", GLUT_BITMAP_TIMES_ROMAN_24);
+        if(n){
+            iText(MODES_X+133, MODES_Y+22, "MODES", GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(MODES_X+134, MODES_Y+23, "MODES", GLUT_BITMAP_TIMES_ROMAN_24);
         }
-        
-        // --- END EDITS FOR HIGHLIGHTED TEXT ---
-
-        // Original History, Settings, Quit highlights
-        if(y){iText(HIST_X+125, HIST_Y+22, "HISTORY", GLUT_BITMAP_TIMES_ROMAN_24);}
-        if(z){iText(SET_X+125, SET_Y+22, "SETTING", GLUT_BITMAP_TIMES_ROMAN_24);}
-        
-        // Assuming 'z' is also used for the top-left quit button highlight based on your snippet
-        // If the 'z' flag is meant only for 'SETTING', you might need a separate flag for 'QUIT' highlight.
-        // For now, I'm keeping it as per your snippet.
-        if(z){iText(QUIT_X+75, QUIT_Y+15, "QUIT", GLUT_BITMAP_TIMES_ROMAN_24);}
-        
+        if(x){
+            iText(HIST_X+125, HIST_Y+22, "HISTORY", GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(HIST_X+126, HIST_Y+23, "HISTORY", GLUT_BITMAP_TIMES_ROMAN_24);
+        }
+        if(y){
+            iText(SET_X+125, SET_Y+22, "SETTING", GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(SET_X+126, SET_Y+23, "SETTING", GLUT_BITMAP_TIMES_ROMAN_24);
+        }
+        if(z){
+            iText(QUIT_X+75, QUIT_Y+15, "QUIT", GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(QUIT_X+76, QUIT_Y+16, "QUIT", GLUT_BITMAP_TIMES_ROMAN_24);
+        }
         return;
     }
+
     if(k==1){
-         new_game();
-         handlePlayerInput();
+        new_game();
+        handlePlayerInput();
 
         if (currentPowerUpIcon.isActive) {
             if (currentPowerUpIcon.type == FREEZE) iShowImage(currentPowerUpIcon.x, currentPowerUpIcon.y, "assets/images/Freez.png");
             else if (currentPowerUpIcon.type == SUPER_KICK) iShowImage(currentPowerUpIcon.x, currentPowerUpIcon.y, "assets/images/Superkick.png");
-            else if (currentPowerUpIcon.type == SIZE_DOWN) iShowImage(currentPowerUpIcon.x, currentPowerUpIcon.y, "assets/images/shrink.png");
+            else if (currentPowerUpIcon.type == DOUBLE_GOAL) iShowImage(currentPowerUpIcon.x, currentPowerUpIcon.y, "assets/images/shrink.png");
+        }
+        iShowImage(940, 540, "assets/images/pause_icon.png");
+        if (isPaused) {
+            iShowImage(0, 40, "assets/images/name.jpg"); 
+            iShowImage(300, 500, "assets/images/score_board1.png");
+            iSetColor(200, 200, 200);
+            iFilledRectangle(400, 350, 200, 50);
+            iFilledRectangle(400, 280, 200, 50);
+            iFilledRectangle(400, 210, 200, 50);
+            iSetColor(0, 0, 0);
+            iText(460, 368, "RESUME", GLUT_BITMAP_HELVETICA_18);
+            iText(445, 298, "SAVE GAME", GLUT_BITMAP_HELVETICA_18);
+            iText(430, 228, "BACK TO MENU", GLUT_BITMAP_HELVETICA_18);
+
+            if (showSaveConfirmation ) {
+                iSetColor(0, 255, 0);
+                iText(440, 420, "GAME SAVED!", GLUT_BITMAP_TIMES_ROMAN_24);
+                saveConfirmTimer++;
+                if (saveConfirmTimer > 5) {
+                    showSaveConfirmation = false;
+                    saveConfirmTimer = 0;
+                }
+            }
         }
 
-         iShowImage(940, 540, "assets/images/pause_icon.png");
-
-         if (isPaused) {
-             
-             iShowImage(0, 40, "assets/images/name.jpg"); 
-
-             iSetColor(200, 200, 200);
-             iFilledRectangle(400, 350, 200, 50);
-             iFilledRectangle(400, 280, 200, 50);
-             iFilledRectangle(400, 210, 200, 50);
-
-             iSetColor(0, 0, 0);
-             iText(460, 368, "RESUME", GLUT_BITMAP_HELVETICA_18);
-             iText(445, 298, "SAVE GAME", GLUT_BITMAP_HELVETICA_18);
-             iText(430, 228, "BACK TO MENU", GLUT_BITMAP_HELVETICA_18);
-
-             if (showSaveConfirmation) {
-                 iSetColor(0, 255, 0);
-                 iText(440, 420, "GAME SAVED!", GLUT_BITMAP_TIMES_ROMAN_24);
-                 saveConfirmTimer++;
-                 if (saveConfirmTimer > 100) {
-                     showSaveConfirmation = false;
-                     saveConfirmTimer = 0;
-                 }
-             }
-         }
-
     }
+
     if(k==5 ){
         iShowImage(0, 40, "assets/images/result.png");
         iSetColor(255,255,255);
-        if(player1_score > player2_score)
-            iText(450, 300, "PLAYER 1 WINS", GLUT_BITMAP_TIMES_ROMAN_24);
-        else if(player2_score > player1_score)
-            iText(450, 300, "PLAYER 2 WINS", GLUT_BITMAP_TIMES_ROMAN_24);
-        else
-            iText(450, 300, "DRAW!", GLUT_BITMAP_TIMES_ROMAN_24);
+
+        if(player1_score > player2_score) iText(700, 300, "PLAYER 1 WINS", GLUT_BITMAP_TIMES_ROMAN_24);
+        else if(player2_score > player1_score) iText(700, 300, "PLAYER 2 WINS", GLUT_BITMAP_TIMES_ROMAN_24);
+        else iText(700, 300, "DRAW!", GLUT_BITMAP_TIMES_ROMAN_24);
+
         return;
     }
-    
-    char p1_score[20];
-    char p2_score[20];
+    char p1_score[5];
+    char p2_score[5];
+    char p1_display_name[20];
+    char p2_display_name[20];
     sprintf(p1_score, " %d ", player1_score);
     sprintf(p2_score, " %d ", player2_score);
+    strncpy(p1_display_name,player1_name,6);
+    strncpy(p2_display_name,player2_name,6);
+    p1_display_name[6] = '\0';
+    p2_display_name[6] = '\0';
     iSetColor(255,255,255);
-    iText(385, 541, p1_score,GLUT_BITMAP_TIMES_ROMAN_24);  // Draw at top-left corner (adjust coords as needed)
+    iText(460, 541, p1_score,GLUT_BITMAP_TIMES_ROMAN_24);
+    iText(360, 541, p1_display_name,GLUT_BITMAP_TIMES_ROMAN_24);
     iSetColor(255,255,255);
-    iText(587, 541, p2_score,GLUT_BITMAP_TIMES_ROMAN_24);
-    iSetColor(255, 255, 255);  // White color (change if needed)
-    iText(478, 507, timeText, GLUT_BITMAP_9_BY_15); // Top-center-ish position
+    iText(515, 541, p2_score,GLUT_BITMAP_TIMES_ROMAN_24);
+    iText(560, 541, p2_display_name,GLUT_BITMAP_TIMES_ROMAN_24);
+    iSetColor(255, 255, 255);
+    iText(478, 507, timeText, GLUT_BITMAP_9_BY_15);
     drawGoalOverlay();
 }
 
-
-   // iText(140, 180, "Head soccer");
-
-
-/*
-function iMouseMove() is called when the user moves the mouse.
-(mx, my) is the position where the mouse pointer is.
-*/
-void iMouseMove(int mx, int my)
-{
-    // place your codes here
-    if(k) return;          /* Only MENU*/
-
+void iMouseMove(int mx, int my) {
+    if(k) return;
     m = (mx>=PLAY_X  && mx<=PLAY_X+BTN_W  && my>=PLAY_Y  && my<=PLAY_Y+BTN_H);
+    q = (mx>=CONTINUE_X  && mx<=CONTINUE_X+BTN_W  && my>=CONTINUE_Y  && my<=CONTINUE_Y+BTN_H);
     n = (mx>=MODES_X && mx<=MODES_X+BTN_W && my>=MODES_Y && my<=MODES_Y+BTN_H);
     x = (mx>=HIST_X  && mx<=HIST_X+BTN_W  && my>=HIST_Y && my<=HIST_Y+BTN_H);
     y = (mx>=SET_X   && mx<=SET_X+BTN_W   && my>=SET_Y  && my<=SET_Y+BTN_H);
     z = (mx>=QUIT_X  && mx<=QUIT_X+QUIT_W  && my>=QUIT_Y && my<=QUIT_Y+QUIT_H);
 }
 
-/*
-function iMouseDrag() is called when the user presses and drags the mouse.
-(mx, my) is the position where the mouse pointer is.
-*/
 void iMouseDrag(int mx, int my)
 {
-    // place your codes here
+
 }
 
-
-/*
-function iMouse() is called when the user presses/releases the mouse.
-(mx, my) is the position where the mouse pointer is.
-*/
 void iMouse(int button, int state, int mx, int my)
 {
-      if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && k == 0) // Only process clicks on the main menu (k==0)
-    {
-        // Button 1: "NEW GAME" at PLAY_X, PLAY_Y (Topmost right-side button)
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && k == 0) {
         if (mx >= PLAY_X && mx <= PLAY_X + BTN_W && my >= PLAY_Y && my <= PLAY_Y + BTN_H) {
-            // This is always the "NEW GAME" button, and it deletes the previous save
-            saveGameExists = false; // Mark that save doesn't exist anymore
-            remove("savegame.txt"); // Delete previous saved game file
-            reset_game(); // Reset scores, timer, player positions etc. to start fresh
-            k = P1_NAME_INPUT; // Go to player name input screen
-            name_input_len = 0; // Clear name input buffer
-            name_input_str[0] = '\0'; // Null-terminate the string
+            saveGameExists = false;
+            remove("savegame.txt");
+            reset_game();
+            k = P1_NAME_INPUT;
+            name_input_len = 0;
+            name_input_str[0] = '\0';
             return;
         }
 
-        // Button 2: "CONTINUE" / "NO SAVED GAME" at CONTINUE_X, CONTINUE_Y
-          if (mx >= CONTINUE_X && mx <= CONTINUE_X + BTN_W &&
-                my >= CONTINUE_Y && my <= CONTINUE_Y + BTN_H) {
-                if (saveGameExists) { // Only allow continue if a save game exists
-                    suppressGoalSoundOnce = true; // Set flag to suppress sound
-                    bool loaded = loadGameState(); // Load the game
-                    if (loaded) {
-                        k = 1; // Change state to gameplay if loaded successfully
-                        resetField(); // Reset field (without sound due to flag)
-                    } else {
-                        // If load failed, reset the flag so regular goals still play sound
-                        suppressGoalSoundOnce = false;
-                        // Optionally, add some feedback to the user that load failed
-                    }
-                }
+        if (mx >= CONTINUE_X && mx <= CONTINUE_X + BTN_W && my >= CONTINUE_Y && my <= CONTINUE_Y + BTN_H) {
+
+            if (saveGameExists) { 
+                suppressGoalSoundOnce = true;
+                bool loaded = loadGameState();
+
+                if (loaded) {
+                    k = 1;
+                    resetField();
+                } 
+                else suppressGoalSoundOnce = false;
             }
+        }
 
-        // Button 3: "MODES" at MODES_X, MODES_Y
         if (mx >= MODES_X && mx <= MODES_X + BTN_W && my >= MODES_Y && my <= MODES_Y + BTN_H) {
-            k = 4; // Go to the modes selection page
+            k = 4;
             return;
         }
 
-        // Button 4: "HISTORY" at HIST_X, HIST_Y
         if (mx >= HIST_X && mx <= HIST_X + BTN_W && my >= HIST_Y && my <= HIST_Y + BTN_H) {
-            k = HISTORY; // Go to the history/leaderboard page
+            k = HISTORY;
             return;
         }
 
-        // Button 5: "SETTINGS" at SET_X, SET_Y
         if (mx >= SET_X && mx <= SET_X + BTN_W && my >= SET_Y && my <= SET_Y + BTN_H) {
-            k = 3; // Go to the settings page
+            k = 3;
             return;
         }
 
-        // Button 6: "QUIT" at QUIT_X, QUIT_Y (Top-left corner)
         if (mx >= QUIT_X && mx <= QUIT_X + QUIT_W && my >= QUIT_Y && my <= QUIT_Y + QUIT_H) {
-            exit(0); // Exit the entire application
+            exit(0);
             return;
         }
     }
-      if (k == 1 && button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+
+    if (k == 1 && button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+
         if (isPaused) {
-            // RESUME button
+
             if (mx >= 400 && mx <= 600 && my >= 350 && my <= 400) {
                 isPaused = false;
                 showSaveConfirmation = false;
                 saveConfirmTimer = 0;
             }
-            // SAVE GAME button
+
             if (mx >= 400 && mx <= 600 && my >= 280 && my <= 330) {
                 saveGameState();
                 saveGameExists = true;
                 showSaveConfirmation = true;
                 saveConfirmTimer = 0;
             }
-            // BACK TO MENU button
+
             if (mx >= 400 && mx <= 600 && my >= 210 && my <= 260) {
                 isPaused = false;
                 k = 0;
             }
-        } else {
-            // PAUSE ICON
+        } 
+        else {
+
             if (mx >= 940 && mx <= 990 && my >= 540 && my <= 590) {
                 isPaused = true;
             }
@@ -1387,32 +1258,32 @@ void iMouse(int button, int state, int mx, int my)
 
     if(k==3){
         if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN){
-            /* --- BG music + --- */
+
             if(mx>=BG_MUSIC_PLUS_BUTTON_X && mx<=BG_MUSIC_PLUS_BUTTON_X+60 && my>=BG_MUSIC_PLUS_BUTTON_Y && my<=BG_MUSIC_PLUS_BUTTON_Y+45){
                 iIncreaseVolume(bgSoundIdx, 10);
             }
-            /* --- BG music - --- */
+
             if(mx>=BG_MUSIC_MINUS_BUTTON_X && mx<=BG_MUSIC_MINUS_BUTTON_X+60 && my>=BG_MUSIC_MINUS_BUTTON_Y && my<=BG_MUSIC_MINUS_BUTTON_Y+45){
                 iDecreaseVolume(bgSoundIdx, 10);
             }
 
-            /* --- SFX + --- */
+
             if(mx>=SOUND_MUSIC_PLUS_BUTTON_X && mx<=SOUND_MUSIC_PLUS_BUTTON_X+60 && my>=SOUND_MUSIC_PLUS_BUTTON_Y && my<=SOUND_MUSIC_PLUS_BUTTON_Y+45){
                 iIncreaseVolume(cheerSoundIdx, 10);
                 iIncreaseVolume(kickSoundIdx, 10);
             }
-            /* --- SFX - --- */
+
             if(mx>=SOUND_MUSIC_MINUS_BUTTON_X && mx<=SOUND_MUSIC_MINUS_BUTTON_X+60 && my>=SOUND_MUSIC_MINUS_BUTTON_Y && my<=SOUND_MUSIC_MINUS_BUTTON_Y+45){
                 iDecreaseVolume(cheerSoundIdx, 10);
                 iDecreaseVolume(kickSoundIdx, 10);
             }
 
-            /* --- Back button --- */
+
             if(mx>=BTN_BACK_X && mx<=BTN_BACK_X+BTN_BACK_W && my>=BTN_BACK_Y && my<=BTN_BACK_Y+BTN_BACK_H){
-                k = 0;      /* leave settings → back to main menu */
+                k = 0;
             }
         }
-        return;   /* don’t let other menu/game clicks run while in settings */
+        return;
     }
 
     if(k == -1 && !loadingStarted && button==GLUT_LEFT_BUTTON && state==GLUT_DOWN){
@@ -1424,104 +1295,102 @@ void iMouse(int button, int state, int mx, int my)
     if(k == 4 && button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
         if(mx >= 227 && mx <= 227+428 && my >= 340 && my <= 340+68){
             mode_3min_selected = true;
-            mode_score_selected = false; // Ensure other modes are off
-            k = 0; // Go back to the main menu
+            mode_score_selected = false;
+            k = 0;
         }
         else if(mx >= 227 && mx <= 227+428 && my >= 240 && my <= 240+68){
             mode_score_selected = true;
-            mode_3min_selected = false; // Ensure other modes are off
-            k = 0; // Go back to the main menu
+            mode_3min_selected = false;
+            k = 0;
         }
         else if(mx>=227 && mx<=227+428 && my>=150 && my<=150+68){
                 k = 0;
         }
     }
     if (k == HISTORY && button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        // Assuming a back button at bottom-center
         if (mx >= 400 && mx <= 600 && my >= 50 && my <= 100) {
-            k = 0; // Go back to main menu
+            k = 0;
         }
     }
     if (k == P1_NAME_INPUT && button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
         if (mx >= 20 && mx <= 70 && my >= 520 && my <= 570) {
-            k = 0; // Go back to main menu
+            k = 0;
         }
     }
     if (k == P2_NAME_INPUT && button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
         if (mx >= 20 && mx <= 70 && my >= 520 && my <= 570) {
-            k = 0; // Go back to main menu
+            k = 0;
         }
     }
     if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
     {
-        // place your codes here
+
     }
 }
 
-/*
-function iMouseWheel() is called when the user scrolls the mouse wheel.
-dir = 1 for up, -1 for down.
-*/
 void iMouseWheel(int dir, int mx, int my)
 {
-    // place your code here
+
 }
+
 void update_player1()
 {
-    switch (state)
-    {
-    case IDLE:
-        player1_image = player1_idle[idle_idx];
-        idle_idx = (idle_idx + 1) % 18;
+    switch (state){
+        case IDLE:
+            player1_image = player1_idle[idle_idx];
+            idle_idx = (idle_idx + 1) % 18;
+            break;
 
-        break;
-    case FORWARD:
-        player1_image = player1_forward[forward_idx];
-        forward_idx = (forward_idx + 1) % 5;
-        if (forward_idx == 0)
-        {
-            state = IDLE;
-        }
-        break;
-    case JUMP:
-        player1_image = player1_jump[jump_idx];
-        jump_idx ++;
-        if (jump_idx == 4)
-    {
-        vy1           = 0;         
-        falldown_idx  = 0;         
-        state         = FALLDOWN;  
-        break;                     
-    }
+        case FORWARD:
+            player1_image = player1_forward[forward_idx];
+            forward_idx = (forward_idx + 1) % 5;
 
-    if (jump_idx == 5) jump_idx = 0;
-        break;
-    case BACKWARD:
-        player1_image = player1_backward[backward_idx];
-        backward_idx = (backward_idx + 1) % 5;
-        if (backward_idx == 0)
-        {
-            state = IDLE;
-        }
-        break;
-    case FALLDOWN:
-        player1_image = player1_falldown[falldown_idx];
-        falldown_idx = (falldown_idx + 1) % 5;
-        if (falldown_idx == 0 && pic1_y == 62)
-        {
-            state = IDLE;
-        }
-        break;
-    case KICK:
-    player1_image = player1_kick[kick_idx];
-    kick_idx = (kick_idx + 1) % 5;
-    if(kick_idx == 0)
-        state = IDLE;
-    break;
-        
+            if (forward_idx == 0){
+                state = IDLE;
+            }
+            break;
+
+        case JUMP:
+            player1_image = player1_jump[jump_idx];
+            jump_idx ++;
+
+            if (jump_idx == 4){
+                vy1           = 0;         
+                falldown_idx  = 0;         
+                state         = FALLDOWN;  
+                break;                     
+            }
+
+            if (jump_idx == 5) jump_idx = 0;
+            break;
+
+        case BACKWARD:
+            player1_image = player1_backward[backward_idx];
+            backward_idx = (backward_idx + 1) % 5;
+
+            if (backward_idx == 0){
+                state = IDLE;
+            }
+            break;
+
+        case FALLDOWN:
+            player1_image = player1_falldown[falldown_idx];
+            falldown_idx = (falldown_idx + 1) % 5;
+
+            if (falldown_idx == 0 && pic1_y == 62) {
+                state = IDLE;
+            }
+            break;
+
+        case KICK:
+            player1_image = player1_kick[kick_idx];
+            kick_idx = (kick_idx + 1) % 5;
+            if(kick_idx == 0)
+                state = IDLE;
+            break;
+            
     }
 }
-
 
 void update_player2()
 {
@@ -1578,42 +1447,45 @@ void update_player2()
     }
 }
 
-/*
-function iKeyboard() is called whenever the user hits a key in keyboard.
-*/
 void iKeyboard(unsigned char key)
 {
-    // Only handle single-press, non-movement actions here.
     if (k == P1_NAME_INPUT || k == P2_NAME_INPUT) {
-        if (key == '\r') { // Enter key pressed
+        if (key == '\r') {
+
             if (k == P1_NAME_INPUT) {
                 strcpy(player1_name, name_input_str);
-                k = P2_NAME_INPUT; // Move to player 2's turn
+                k = P2_NAME_INPUT;
                 name_input_len = 0;
                 name_input_str[0] = '\0';
-            } else if (k == P2_NAME_INPUT) {
+            } 
+
+            else if (k == P2_NAME_INPUT) {
                 strcpy(player2_name, name_input_str);
-                // Now start the game
                 k = 1;
-                //reset_game();
                 gameEnded = false;
                 count_timer = 0;
                 minute = 0;
                 second = 0;
             }
-        } else if (key == '\b') { // Backspace key
+        } 
+
+        else if (key == '\b') {
+
             if (name_input_len > 0) {
                 name_input_len--;
                 name_input_str[name_input_len] = '\0';
             }
-        } else { // Any other character
+        } 
+
+        else {
+
             if (name_input_len < 99) {
                 name_input_str[name_input_len] = key;
                 name_input_len++;
                 name_input_str[name_input_len] = '\0';
             }
         }
-        return; // Don't process other keys while typing name
+        return;
     }
     switch (key)
     {
@@ -1626,12 +1498,8 @@ void iKeyboard(unsigned char key)
     }
 }
 
-/*
-function iSpecialKeyboard() is called whenver user hits special keys
-*/
 void iSpecialKeyboard(unsigned char key)
 {
-    // Only handle single-press, non-movement actions here.
     if (key == GLUT_KEY_END) {
         exit(0);
     }
@@ -1641,30 +1509,28 @@ void iSpecialKeyboard(unsigned char key)
 int main(int argc, char *argv[])
 {
     glutInit(&argc, argv);
-    // place your own initialization codes here.
+
     loadHistory();
-    
-    iInitializeSound();                               /* init audio engine */
-    bgSoundIdx = iPlaySound(BG_MUSIC_FILE, true);  /* loop */
+    iInitializeSound();
+    bgSoundIdx = iPlaySound(BG_MUSIC_FILE, true);
     if(k==1)iDecreaseVolume(bgSoundIdx, 40);
     if(k!=1)iIncreaseVolume(bgSoundIdx, 40);
-
     pic1_x = 100;
     pic1_y = 62;
     pic2_x = 745;
     pic2_y = 62;
     pic_ballx = 475;
     pic_bally = 85;
-    iSetTimer(16, move_ball);
     populate_player1_images();
     populate_player2_images();
+    iSetTimer(16, move_ball);
     iSetTimer(60, update_player);
     iSetTimer(30,  gravityTick);
     iSetTimer(20, loadingTick);
     iSetTimer(400, blink);
     iSetTimer(1000,Watch);
-    iSetTimer(10000, powerUpSpawner); // <-- ADD THIS (tries to spawn every 10s)
-    iSetTimer(100, effectsManager);  // <-- ADD THIS (manages effect durations)
+    iSetTimer(10000, powerUpSpawner);
+    iSetTimer(100, effectsManager);
     loadingDone = false;
     k = -1;
     iDecreaseVolume(bgSoundIdx, 100);
