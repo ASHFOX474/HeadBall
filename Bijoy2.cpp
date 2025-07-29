@@ -998,16 +998,20 @@ void iDraw(){
 
     if (k == HISTORY) {
         iShowImage(0, 40, "assets/images/HIS.jpg");
-        iSetColor(255, 0,0);
+        
         int newest_game_index = (next_history_slot - 1 + MAX_HISTORY) % MAX_HISTORY;
 
         for (int i = 0; i < history_count; i++) {
             char history_text[250];
             int index = (newest_game_index - i + MAX_HISTORY) % MAX_HISTORY;
+            
             sprintf(history_text, "%d        %d", history_log[index].p1_score, history_log[index].p2_score);
+            iSetColor(256, 56,110);
             iText(170, 425 - i * 65, history_log[index].p1_name, GLUT_BITMAP_TIMES_ROMAN_24);
-            iText(457, 425 - i * 65, history_text, GLUT_BITMAP_TIMES_ROMAN_24);
+            
             iText(580, 425 - i * 65, history_log[index].p2_name, GLUT_BITMAP_TIMES_ROMAN_24);
+            iSetColor(200,200,200);
+            iText(457, 425 - i * 65, history_text, GLUT_BITMAP_TIMES_ROMAN_24);
         }
         iSetColor(255, 0, 0);
         iFilledRectangle(400, 50, 200, 50);
