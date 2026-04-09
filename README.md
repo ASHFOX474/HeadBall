@@ -123,7 +123,8 @@ HeadBall/
 
 ## 👥 Authors
 
-- **ASHFOX474** — [GitHub Profile](https://github.com/ASHFOX474)
+- **Md. Ashraf Hossain Chowdhury** — [GitHub](https://github.com/ASHFOX474)
+- **Lokonath Basak Bijoy** — [GitHub](https://github.com/GodButcher-Bijoy)
 
 ---
 
