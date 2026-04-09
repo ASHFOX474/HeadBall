@@ -61,7 +61,7 @@ No build tools or dependencies required — just download and play!
 
 **1. Go to the Releases page**
 
-👉 [https://github.com/ASHFOX474/HeadBall/tree/main/Releases](https://github.com/ASHFOX474/HeadBall/releases/tag/v1.0)
+👉 [Releases](https://github.com/ASHFOX474/HeadBall/releases/tag/v1.0)
 
 **2. Download `Headball.zip`**
 
